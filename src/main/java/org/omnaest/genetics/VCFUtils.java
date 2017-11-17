@@ -18,6 +18,9 @@
 */
 package org.omnaest.genetics;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -37,6 +40,33 @@ import org.omnaest.utils.StreamUtils;
 public class VCFUtils
 {
 	private static VCFParserManager parserManager = new VCFParserManager().register(new VCFParser_4_1());
+
+	/**
+	 * Similar to {@link #read(File, Charset)} using {@link StandardCharsets#UTF_8}
+	 * 
+	 * @param file
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws NoParserAvailableException
+	 */
+	public static VCFData read(File file) throws FileNotFoundException, NoParserAvailableException
+	{
+		return read(file, StandardCharsets.UTF_8);
+	}
+
+	/**
+	 * Similar to {@link #read(InputStream, Charset)} using the given {@link File}
+	 * 
+	 * @param file
+	 * @param charset
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws NoParserAvailableException
+	 */
+	public static VCFData read(File file, Charset charset) throws FileNotFoundException, NoParserAvailableException
+	{
+		return read(new FileInputStream(file), charset);
+	}
 
 	/**
 	 * Similar to {@link #read(InputStream, Charset)} with {@link StandardCharsets#UTF_8}
