@@ -18,7 +18,10 @@
 */
 package org.omnaest.genetics.domain;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class VCFRecord
 {
@@ -99,12 +102,51 @@ public class VCFRecord
 		return this.sampleFields;
 	}
 
+	public Map<String, String> getInfoAsMap()
+	{
+		Map<String, String> retmap = new LinkedHashMap<>();
+
+		if (StringUtils.isNotBlank(this.info))
+		{
+			String[] pairs = StringUtils.split(this.info, ";");
+			if (pairs != null)
+			{
+				for (String pair : pairs)
+				{
+					String[] keyAndValue = StringUtils.splitPreserveAllTokens(pair, "=");
+					if (keyAndValue != null && keyAndValue.length == 2)
+					{
+						retmap.put(keyAndValue[0], keyAndValue[1]);
+					}
+				}
+			}
+		}
+
+		return retmap;
+	}
+
+	public enum AdditionalInfo
+	{
+		Gene, AA, AC, AF, AN, BQ, CIGAR, DB, DP, END, H2, H3, MQ, MQ0, NS, SB, SOMATIC, VALIDATED
+	}
+
+	public String getInfo(AdditionalInfo additionalInfo)
+	{
+		return this	.getInfoAsMap()
+					.get(additionalInfo.name());
+	}
+
 	@Override
 	public String toString()
 	{
 		return "VCFRecord [chromosome=" + this.chromosome + ", position=" + this.position + ", id=" + this.id + ", reference=" + this.reference
 				+ ", alternativeAlleles=" + this.alternativeAlleles + ", quality=" + this.quality + ", filter=" + this.filter + ", info=" + this.info
 				+ ", format=" + this.format + ", sampleFields=" + this.sampleFields + "]";
+	}
+
+	public boolean hasInfo(AdditionalInfo additionalInfo)
+	{
+		return this.getInfo(additionalInfo) != null;
 	}
 
 }
