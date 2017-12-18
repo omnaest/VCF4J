@@ -43,6 +43,8 @@ import org.omnaest.genetics.components.parser.VCFParser_4_1;
 import org.omnaest.genetics.domain.VCFData;
 import org.omnaest.genetics.domain.VCFRecord;
 import org.omnaest.genetics.fasta.translator.NucleicAcidCode;
+import org.omnaest.genetics.fasta.translator.TranslationUtils.CodeAndPosition;
+import org.omnaest.utils.ConsumerUtils;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.element.UnaryLeftAndRight;
@@ -207,51 +209,71 @@ public class VCFUtils
 							}
 
 							@Override
-							public Stream<NucleicAcidCode> applyToChromosome(String chromosome, Stream<NucleicAcidCode> sequence)
+							public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence)
+							{
+								AtomicLong position = new AtomicLong(1);
+								return this	.applyToChromosomeCodeAndPositionSequence(	chromosome,
+																						sequence.map(code -> new CodeAndPosition<>(	code,
+																																	position.getAndIncrement())))
+											.map(cap -> cap.getCode());
+							}
+
+							@Override
+							public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
+																														Stream<CodeAndPosition<NucleicAcidCode>> sequence)
 							{
 								Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = this.determinePositionToReplacement(chromosomeToRecords.getOrDefault(	StringUtils.upperCase(chromosome),
 																																													Collections.emptyList()));
 
-								AtomicLong position = new AtomicLong(1);
-								return sequence.flatMap(code ->
+								AtomicLong position = new AtomicLong(-1);
+								return sequence	.peek(ConsumerUtils.consumeOnce(code ->
 								{
-									Stream<NucleicAcidCode> retval = Stream.of(code);
-
-									long currentPosition = position.getAndIncrement();
-									List<UnaryLeftAndRight<NucleicAcidCode>> replacements = positionToReplacement.get(currentPosition);
-									if (replacements != null)
+									if (position.get() < 0)
 									{
-										UnaryLeftAndRight<NucleicAcidCode> replacement = ListUtils.get(replacements, this.allele);
-
-										if (replacement != null)
-										{
-											NucleicAcidCode referenceCode = replacement.getLeft();
-											NucleicAcidCode replacementCode = replacement.getRight();
-
-											if (referenceCode == null)
-											{
-												retval = Stream.of(replacementCode, code);
-											}
-											else
-											{
-												//
-												this.assertReferenceCodeMatches(code, currentPosition, referenceCode);
-
-												//
-												if (replacementCode == null)
-												{
-													retval = Stream.empty();
-												}
-												else
-												{
-													retval = Stream.of(replacementCode);
-												}
-											}
-										}
+										position.set(Math.max(1, code.getPosition()));
 									}
+								}))
+												.flatMap(code ->
+												{
+													//
+													Stream<NucleicAcidCode> retval = Stream.of(code.getCode());
 
-									return retval;
-								});
+													//
+													long currentPosition = code.getPosition();
+													List<UnaryLeftAndRight<NucleicAcidCode>> replacements = positionToReplacement.get(currentPosition);
+													if (replacements != null)
+													{
+														UnaryLeftAndRight<NucleicAcidCode> replacement = ListUtils.get(replacements, this.allele);
+
+														if (replacement != null)
+														{
+															NucleicAcidCode referenceCode = replacement.getLeft();
+															NucleicAcidCode replacementCode = replacement.getRight();
+
+															if (referenceCode == null)
+															{
+																retval = Stream.of(replacementCode, code.getCode());
+															}
+															else
+															{
+																//
+																this.assertReferenceCodeMatches(code.getCode(), currentPosition, referenceCode);
+
+																//
+																if (replacementCode == null)
+																{
+																	retval = Stream.empty();
+																}
+																else
+																{
+																	retval = Stream.of(replacementCode);
+																}
+															}
+														}
+													}
+
+													return retval.map(c -> new CodeAndPosition<>(c, position.getAndIncrement()));
+												});
 							}
 
 							private void assertReferenceCodeMatches(NucleicAcidCode code, long currentPosition, NucleicAcidCode referenceCode)

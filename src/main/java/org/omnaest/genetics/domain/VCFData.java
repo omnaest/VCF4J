@@ -21,6 +21,7 @@ package org.omnaest.genetics.domain;
 import java.util.stream.Stream;
 
 import org.omnaest.genetics.fasta.translator.NucleicAcidCode;
+import org.omnaest.genetics.fasta.translator.TranslationUtils.CodeAndPosition;
 
 public interface VCFData
 {
@@ -60,7 +61,17 @@ public interface VCFData
 		 * @param sequence
 		 * @return
 		 */
-		public Stream<NucleicAcidCode> applyToChromosome(String chromosome, Stream<NucleicAcidCode> sequence);
+		public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence);
+
+		/**
+		 * Similar to {@link #applyToChromosomeSequence(String, Stream)} but with a {@link Stream} of {@link CodeAndPosition} as data source
+		 * 
+		 * @param chromosome
+		 * @param sequence
+		 * @return
+		 */
+		public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
+																									Stream<CodeAndPosition<NucleicAcidCode>> sequence);
 	}
 
 	public Stream<VCFRecord> getRecords();

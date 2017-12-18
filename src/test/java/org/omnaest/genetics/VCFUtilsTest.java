@@ -20,12 +20,16 @@ package org.omnaest.genetics;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.genetics.domain.VCFData;
 import org.omnaest.genetics.fasta.domain.NucleicAcidCodeSequence;
+import org.omnaest.genetics.fasta.translator.NucleicAcidCode;
+import org.omnaest.genetics.fasta.translator.TranslationUtils.CodeAndPosition;
 
 public class VCFUtilsTest
 {
@@ -59,31 +63,73 @@ public class VCFUtilsTest
 
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.applyToChromosome("X", referenceSequence.stream())
+																			.applyToChromosomeSequence("X", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
 			assertEquals("atCga".toUpperCase(), mergeSequence);
 		}
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.applyToChromosome("1", referenceSequence.stream())
+																			.applyToChromosomeSequence("1", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
 			assertEquals("atGga".toUpperCase(), mergeSequence);
 		}
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.applyToChromosome("2", referenceSequence.stream())
+																			.applyToChromosomeSequence("2", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
 			assertEquals("atga".toUpperCase(), mergeSequence);
 		}
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.applyToChromosome("3", referenceSequence.stream())
+																			.applyToChromosomeSequence("3", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
 			assertEquals("atCAga".toUpperCase(), mergeSequence);
+		}
+
+		{
+			AtomicLong position = new AtomicLong(1);
+			List<CodeAndPosition<NucleicAcidCode>> mergeSequence = vcfData	.applicator()
+																			.applyToChromosomeCodeAndPositionSequence("3", referenceSequence.stream()
+																																			.map(code -> new CodeAndPosition<NucleicAcidCode>(	code,
+																																																position.getAndIncrement())))
+
+																			.collect(Collectors.toList());
+
+			int ii = 0;
+			assertEquals(1, mergeSequence	.get(ii)
+											.getPosition());
+			assertEquals("a".toUpperCase(), mergeSequence	.get(ii++)
+															.getCode()
+															.toString());
+			assertEquals(2, mergeSequence	.get(ii)
+											.getPosition());
+			assertEquals("t".toUpperCase(), mergeSequence	.get(ii++)
+															.getCode()
+															.toString());
+			assertEquals(3, mergeSequence	.get(ii)
+											.getPosition());
+			assertEquals("C".toUpperCase(), mergeSequence	.get(ii++)
+															.getCode()
+															.toString());
+			assertEquals(4, mergeSequence	.get(ii)
+											.getPosition());
+			assertEquals("A".toUpperCase(), mergeSequence	.get(ii++)
+															.getCode()
+															.toString());
+			assertEquals(5, mergeSequence	.get(ii)
+											.getPosition());
+			assertEquals("g".toUpperCase(), mergeSequence	.get(ii++)
+															.getCode()
+															.toString());
+			assertEquals(6, mergeSequence	.get(ii)
+											.getPosition());
+			assertEquals("a".toUpperCase(), mergeSequence	.get(ii++)
+															.getCode()
+															.toString());
 		}
 
 	}
