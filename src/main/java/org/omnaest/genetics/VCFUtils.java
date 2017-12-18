@@ -47,6 +47,19 @@ import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.element.UnaryLeftAndRight;
 
+/**
+ * Utils regarding the variant call format<br>
+ * <br>
+ * Example use:<br>
+ * 
+ * <pre>
+ * VCFData vcfData = VCFUtils.read()
+ * 							.from(new File("genome.vcf"))
+ * 							.parse();
+ * </pre>
+ * 
+ * @author omnaest
+ */
 public class VCFUtils
 {
 	private static VCFParserManager parserManager = new VCFParserManager().register(new VCFParser_4_1());
