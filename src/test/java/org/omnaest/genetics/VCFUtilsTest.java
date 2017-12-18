@@ -59,6 +59,13 @@ public class VCFUtilsTest
 
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.applyToChromosome("X", referenceSequence.stream())
+																			.collect(Collectors.toList()))
+															.toString();
+			assertEquals("atCga".toUpperCase(), mergeSequence);
+		}
+		{
+			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
 																			.applyToChromosome("1", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
