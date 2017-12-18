@@ -34,7 +34,7 @@ public class VCFParserManager
 {
 	private SortedSet<VCFParserFactory> parserFactorys = new TreeSet<>((v1, v2) -> -1 * Double.compare(v1.getVersion(), v2.getVersion()));
 
-	public static class NoParserAvailableException extends Exception
+	public static class NoParserAvailableException extends RuntimeException
 	{
 		public NoParserAvailableException(List<String> headers)
 		{
@@ -51,7 +51,13 @@ public class VCFParserManager
 		return this;
 	}
 
-	public VCFParser getInstance(Stream<String> lines) throws NoParserAvailableException
+	/**
+	 * @throws NoParserAvailableException
+	 *             if no version specific parser is available
+	 * @param lines
+	 * @return
+	 */
+	public VCFParser getInstance(Stream<String> lines)
 	{
 		Drainage<String> drainage = StreamUtils.drain(lines, line -> !StringUtils.startsWith(line, "#"));
 

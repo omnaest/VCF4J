@@ -18,23 +18,66 @@
 */
 package org.omnaest.genetics;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.stream.Collectors;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.genetics.domain.VCFData;
+import org.omnaest.genetics.fasta.domain.NucleicAcidCodeSequence;
 
 public class VCFUtilsTest
 {
 
 	@Test
+	@Ignore
 	public void testRead() throws Exception
 	{
-		VCFData vcfData = VCFUtils.read(this.getClass()
-											.getResourceAsStream("/example.vcf"));
+		VCFData vcfData = VCFUtils	.read()
+									.from(this	.getClass()
+												.getResourceAsStream("/example.vcf"))
+									.parse();
 
 		vcfData	.getRecords()
 				.forEach(record ->
 				{
 					System.out.println(record);
 				});
+
+	}
+
+	@Test
+	public void testReadAndStream() throws Exception
+	{
+		VCFData vcfData = VCFUtils	.read()
+									.from(this	.getClass()
+												.getResourceAsStream("/example2.vcf"))
+									.parse();
+
+		NucleicAcidCodeSequence referenceSequence = NucleicAcidCodeSequence.valueOf("atCga".toUpperCase());
+
+		{
+			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.applyToChromosome("1", referenceSequence.stream())
+																			.collect(Collectors.toList()))
+															.toString();
+			assertEquals("atGga".toUpperCase(), mergeSequence);
+		}
+		{
+			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.applyToChromosome("2", referenceSequence.stream())
+																			.collect(Collectors.toList()))
+															.toString();
+			assertEquals("atga".toUpperCase(), mergeSequence);
+		}
+		{
+			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.applyToChromosome("3", referenceSequence.stream())
+																			.collect(Collectors.toList()))
+															.toString();
+			assertEquals("atCAga".toUpperCase(), mergeSequence);
+		}
 
 	}
 

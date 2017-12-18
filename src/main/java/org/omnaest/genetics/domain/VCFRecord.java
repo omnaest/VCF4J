@@ -57,36 +57,73 @@ public class VCFRecord
 		return this.chromosome;
 	}
 
+	/**
+	 * Returns the POS column
+	 * 
+	 * @return
+	 */
 	public String getPosition()
 	{
 		return this.position;
 	}
 
+	/**
+	 * Returns the ID column
+	 * 
+	 * @return
+	 */
 	public String getId()
 	{
 		return this.id;
 	}
 
+	/**
+	 * Returns the REF column
+	 * 
+	 * @return
+	 */
 	public String getReference()
 	{
 		return this.reference;
 	}
 
+	/**
+	 * Returns the ALT column
+	 * 
+	 * @return
+	 */
 	public String getAlternativeAlleles()
 	{
 		return this.alternativeAlleles;
 	}
 
+	/**
+	 * Returns the QUAL column
+	 * 
+	 * @return
+	 */
 	public String getQuality()
 	{
 		return this.quality;
 	}
 
+	/**
+	 * Returns the FILTER column
+	 * 
+	 * @return
+	 */
 	public String getFilter()
 	{
 		return this.filter;
 	}
 
+	/**
+	 * Returns the INFO column
+	 * 
+	 * @see #getInfo(AdditionalInfo)
+	 * @see #getInfoAsMap()
+	 * @return
+	 */
 	public String getInfo()
 	{
 		return this.info;
