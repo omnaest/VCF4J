@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.genetics.domain.VCFData;
-import org.omnaest.genetics.fasta.domain.NucleicAcidCodeSequence;
-import org.omnaest.genetics.fasta.translator.NucleicAcidCode;
-import org.omnaest.genetics.fasta.translator.TranslationUtils.CodeAndPosition;
+import org.omnaest.genetics.translator.domain.CodeAndPosition;
+import org.omnaest.genetics.translator.domain.NucleicAcidCode;
+import org.omnaest.genetics.translator.domain.NucleicAcidCodeSequence;
 
 public class VCFUtilsTest
 {

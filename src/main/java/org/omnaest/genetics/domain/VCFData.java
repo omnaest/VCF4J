@@ -20,8 +20,8 @@ package org.omnaest.genetics.domain;
 
 import java.util.stream.Stream;
 
-import org.omnaest.genetics.fasta.translator.NucleicAcidCode;
-import org.omnaest.genetics.fasta.translator.TranslationUtils.CodeAndPosition;
+import org.omnaest.genetics.translator.domain.CodeAndPosition;
+import org.omnaest.genetics.translator.domain.NucleicAcidCode;
 
 public interface VCFData
 {
