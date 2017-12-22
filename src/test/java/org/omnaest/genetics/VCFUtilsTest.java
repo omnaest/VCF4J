@@ -21,6 +21,7 @@ package org.omnaest.genetics;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,7 @@ import org.omnaest.genetics.domain.VCFData;
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
 import org.omnaest.genetics.translator.domain.NucleicAcidCodeSequence;
+import org.omnaest.utils.element.UnaryLeftAndRight;
 
 public class VCFUtilsTest
 {
@@ -63,6 +65,7 @@ public class VCFUtilsTest
 
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.usingPrimaryAllele()
 																			.applyToChromosomeSequence("X", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
@@ -70,6 +73,7 @@ public class VCFUtilsTest
 		}
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.usingPrimaryAllele()
 																			.applyToChromosomeSequence("1", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
@@ -77,6 +81,7 @@ public class VCFUtilsTest
 		}
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.usingPrimaryAllele()
 																			.applyToChromosomeSequence("2", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
@@ -84,6 +89,7 @@ public class VCFUtilsTest
 		}
 		{
 			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.usingPrimaryAllele()
 																			.applyToChromosomeSequence("3", referenceSequence.stream())
 																			.collect(Collectors.toList()))
 															.toString();
@@ -93,6 +99,7 @@ public class VCFUtilsTest
 		{
 			AtomicLong position = new AtomicLong(1);
 			List<CodeAndPosition<NucleicAcidCode>> mergeSequence = vcfData	.applicator()
+																			.usingPrimaryAllele()
 																			.applyToChromosomeCodeAndPositionSequence("3", referenceSequence.stream()
 																																			.map(code -> new CodeAndPosition<NucleicAcidCode>(	code,
 																																																position.getAndIncrement())))
@@ -132,6 +139,57 @@ public class VCFUtilsTest
 															.toString());
 		}
 
+	}
+
+	@Test
+	public void testApplicator() throws Exception
+	{
+		VCFData vcfData = VCFUtils	.read()
+									.from(this	.getClass()
+												.getResourceAsStream("/example3.vcf"))
+									.parse();
+
+		NucleicAcidCodeSequence referenceSequence = NucleicAcidCodeSequence.valueOf("atCga".toUpperCase());
+
+		{
+			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.usingPrimaryAllele()
+																			.applyToChromosomeSequence("1", referenceSequence.stream())
+																			.collect(Collectors.toList()))
+															.toString();
+			assertEquals("atGga".toUpperCase(), mergeSequence);
+		}
+		{
+			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
+																			.usingSecondaryAllele()
+																			.applyToChromosomeSequence("1", referenceSequence.stream())
+																			.collect(Collectors.toList()))
+															.toString();
+			assertEquals("atAga".toUpperCase(), mergeSequence);
+		}
+
+	}
+
+	@Test
+	public void testApplicatorPosition() throws Exception
+	{
+		VCFData vcfData = VCFUtils	.read()
+									.from(this	.getClass()
+												.getResourceAsStream("/example3.vcf"))
+									.parse();
+
+		Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = vcfData	.applicator()
+																							.getPositionToReplacementForChromosome("1");
+
+		assertEquals(1, positionToReplacement.size());
+		assertEquals("G", positionToReplacement	.get(3l)
+												.get(0)
+												.getRight()
+												.toString());
+		assertEquals("A", positionToReplacement	.get(3l)
+												.get(1)
+												.getRight()
+												.toString());
 	}
 
 }

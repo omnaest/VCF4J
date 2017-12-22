@@ -187,102 +187,44 @@ public class VCFUtils
 					{
 						return new GenomeApplicator()
 						{
-							private int allele = 0;
-
 							@Override
-							public GenomeApplicator usingSecondaryAllele()
+							public AlleleSpecificGenomeApplicator usingSecondaryAllele()
 							{
 								return this.usingAllele(1);
 							}
 
 							@Override
-							public GenomeApplicator usingPrimaryAllele()
+							public AlleleSpecificGenomeApplicator usingPrimaryAllele()
 							{
 								return this.usingAllele(0);
 							}
 
 							@Override
-							public GenomeApplicator usingAllele(int allele)
+							public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacementForChromosome(String chromosome)
 							{
-								this.allele = allele;
-								return this;
+								return this.determinePositionToReplacement(chromosomeToRecords.getOrDefault(StringUtils.upperCase(chromosome),
+																											Collections.emptyList()));
 							}
 
 							@Override
-							public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence)
+							public Stream<ChromosomeAndPositionReplacement> getPositionToReplacements()
 							{
-								AtomicLong position = new AtomicLong(1);
-								return this	.applyToChromosomeCodeAndPositionSequence(	chromosome,
-																						sequence.map(code -> new CodeAndPosition<>(	code,
-																																	position.getAndIncrement())))
-											.map(cap -> cap.getCode());
-							}
-
-							@Override
-							public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
-																														Stream<CodeAndPosition<NucleicAcidCode>> sequence)
-							{
-								Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = this.determinePositionToReplacement(chromosomeToRecords.getOrDefault(	StringUtils.upperCase(chromosome),
-																																													Collections.emptyList()));
-
-								AtomicLong position = new AtomicLong(-1);
-								return sequence	.peek(ConsumerUtils.consumeOnce(code ->
-								{
-									if (position.get() < 0)
-									{
-										position.set(Math.max(1, code.getPosition()));
-									}
-								}))
-												.flatMap(code ->
-												{
-													//
-													Stream<NucleicAcidCode> retval = Stream.of(code.getCode());
-
-													//
-													long currentPosition = code.getPosition();
-													List<UnaryLeftAndRight<NucleicAcidCode>> replacements = positionToReplacement.get(currentPosition);
-													if (replacements != null)
-													{
-														UnaryLeftAndRight<NucleicAcidCode> replacement = ListUtils.get(replacements, this.allele);
-
-														if (replacement != null)
-														{
-															NucleicAcidCode referenceCode = replacement.getLeft();
-															NucleicAcidCode replacementCode = replacement.getRight();
-
-															if (referenceCode == null)
+								return chromosomeToRecords	.keySet()
+															.stream()
+															.map(chromosome -> new ChromosomeAndPositionReplacement()
 															{
-																retval = Stream.of(replacementCode, code.getCode());
-															}
-															else
-															{
-																//
-																this.assertReferenceCodeMatches(code.getCode(), currentPosition, referenceCode);
-
-																//
-																if (replacementCode == null)
+																@Override
+																public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacement()
 																{
-																	retval = Stream.empty();
+																	return getPositionToReplacementForChromosome(chromosome);
 																}
-																else
+
+																@Override
+																public String getChromosome()
 																{
-																	retval = Stream.of(replacementCode);
+																	return chromosome;
 																}
-															}
-														}
-													}
-
-													return retval.map(c -> new CodeAndPosition<>(c, position.getAndIncrement()));
-												});
-							}
-
-							private void assertReferenceCodeMatches(NucleicAcidCode code, long currentPosition, NucleicAcidCode referenceCode)
-							{
-								if (!code.equals(referenceCode))
-								{
-									throw new IllegalStateException("Reference code did not match: " + code + "<->" + referenceCode + " at position: "
-											+ currentPosition);
-								}
+															});
 							}
 
 							private Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> determinePositionToReplacement(List<VCFRecord> records)
@@ -311,6 +253,91 @@ public class VCFUtils
 
 								return positionToReplacement;
 							}
+
+							@Override
+							public AlleleSpecificGenomeApplicator usingAllele(int allele)
+							{
+								return new AlleleSpecificGenomeApplicator()
+								{
+
+									@Override
+									public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence)
+									{
+										AtomicLong position = new AtomicLong(1);
+										return this	.applyToChromosomeCodeAndPositionSequence(	chromosome,
+																								sequence.map(code -> new CodeAndPosition<>(	code,
+																																			position.getAndIncrement())))
+													.map(cap -> cap.getCode());
+									}
+
+									@Override
+									public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
+																																Stream<CodeAndPosition<NucleicAcidCode>> sequence)
+									{
+										Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = getPositionToReplacementForChromosome(chromosome);
+
+										AtomicLong position = new AtomicLong(-1);
+										return sequence	.peek(ConsumerUtils.consumeOnce(code ->
+										{
+											if (position.get() < 0)
+											{
+												position.set(Math.max(1, code.getPosition()));
+											}
+										}))
+														.flatMap(code ->
+														{
+															//
+															Stream<NucleicAcidCode> retval = Stream.of(code.getCode());
+
+															//
+															long currentPosition = code.getPosition();
+															List<UnaryLeftAndRight<NucleicAcidCode>> replacements = positionToReplacement.get(currentPosition);
+															if (replacements != null)
+															{
+																UnaryLeftAndRight<NucleicAcidCode> replacement = ListUtils.get(replacements, allele);
+
+																if (replacement != null)
+																{
+																	NucleicAcidCode referenceCode = replacement.getLeft();
+																	NucleicAcidCode replacementCode = replacement.getRight();
+
+																	if (referenceCode == null)
+																	{
+																		retval = Stream.of(replacementCode, code.getCode());
+																	}
+																	else
+																	{
+																		//
+																		this.assertReferenceCodeMatches(code.getCode(), currentPosition, referenceCode);
+
+																		//
+																		if (replacementCode == null)
+																		{
+																			retval = Stream.empty();
+																		}
+																		else
+																		{
+																			retval = Stream.of(replacementCode);
+																		}
+																	}
+																}
+															}
+
+															return retval.map(c -> new CodeAndPosition<>(c, position.getAndIncrement()));
+														});
+									}
+
+									private void assertReferenceCodeMatches(NucleicAcidCode code, long currentPosition, NucleicAcidCode referenceCode)
+									{
+										if (!code.equals(referenceCode))
+										{
+											throw new IllegalStateException("Reference code did not match: " + code + "<->" + referenceCode + " at position: "
+													+ currentPosition);
+										}
+									}
+								};
+							}
+
 						};
 					}
 

@@ -1,0 +1,6 @@
+##fileformat=VCFv4.1
+##fileDate=20090805
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	3	.	C	G	.	PASS	DP=100
+1	3	.	C	A	.	PASS	DP=100
+

@@ -18,29 +18,57 @@
 */
 package org.omnaest.genetics.domain;
 
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
+import org.omnaest.utils.element.UnaryLeftAndRight;
 
 public interface VCFData
 {
 
 	public static interface GenomeApplicator
 	{
+		public static interface AlleleSpecificGenomeApplicator
+		{
+			/**
+			 * Applies the {@link VCFData} to a given {@link Stream} of {@link NucleicAcidCode}s and returns the recombined {@link Stream}.<br>
+			 * <br>
+			 * This is used to apply
+			 * the {@link VCFData} to its reference genome to recalculate the fasta data.
+			 * 
+			 * @param chromosome
+			 * @param sequence
+			 * @return
+			 */
+			public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence);
+
+			/**
+			 * Similar to {@link #applyToChromosomeSequence(String, Stream)} but with a {@link Stream} of {@link CodeAndPosition} as data source
+			 * 
+			 * @param chromosome
+			 * @param sequence
+			 * @return
+			 */
+			public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
+																										Stream<CodeAndPosition<NucleicAcidCode>> sequence);
+		}
+
 		/**
 		 * Similar to {@link #usingAllele(int)} with value = 0
 		 * 
 		 * @return
 		 */
-		public GenomeApplicator usingPrimaryAllele();
+		public AlleleSpecificGenomeApplicator usingPrimaryAllele();
 
 		/**
 		 * Similar to {@link #usingAllele(int)} with value = 1
 		 * 
 		 * @return
 		 */
-		public GenomeApplicator usingSecondaryAllele();
+		public AlleleSpecificGenomeApplicator usingSecondaryAllele();
 
 		/**
 		 * If multiple alleles are found for a single position this defines which one is used
@@ -49,29 +77,19 @@ public interface VCFData
 		 *            = 0,1,...
 		 * @return
 		 */
-		public GenomeApplicator usingAllele(int allele);
+		public AlleleSpecificGenomeApplicator usingAllele(int allele);
 
-		/**
-		 * Applies the {@link VCFData} to a given {@link Stream} of {@link NucleicAcidCode}s and returns the recombined {@link Stream}.<br>
-		 * <br>
-		 * This is used to apply
-		 * the {@link VCFData} to its reference genome to recalculate the fasta data.
-		 * 
-		 * @param chromosome
-		 * @param sequence
-		 * @return
-		 */
-		public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence);
+		public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacementForChromosome(String chromosome);
 
-		/**
-		 * Similar to {@link #applyToChromosomeSequence(String, Stream)} but with a {@link Stream} of {@link CodeAndPosition} as data source
-		 * 
-		 * @param chromosome
-		 * @param sequence
-		 * @return
-		 */
-		public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
-																									Stream<CodeAndPosition<NucleicAcidCode>> sequence);
+		public Stream<ChromosomeAndPositionReplacement> getPositionToReplacements();
+
+		public static interface ChromosomeAndPositionReplacement
+		{
+			public String getChromosome();
+
+			public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacement();
+		}
+
 	}
 
 	public Stream<VCFRecord> getRecords();
