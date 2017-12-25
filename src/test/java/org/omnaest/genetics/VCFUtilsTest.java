@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.genetics.domain.VCFData;
+import org.omnaest.genetics.domain.VCFRecord;
+import org.omnaest.genetics.domain.VCFRecord.SampleInfo;
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
 import org.omnaest.genetics.translator.domain.NucleicAcidCodeSequence;
@@ -50,6 +52,23 @@ public class VCFUtilsTest
 				{
 					System.out.println(record);
 				});
+
+	}
+
+	@Test
+	public void testSampleInfo() throws Exception
+	{
+		VCFData vcfData = VCFUtils	.read()
+									.from(this	.getClass()
+												.getResourceAsStream("/example4.vcf"))
+									.parse();
+
+		VCFRecord vcfRecord = vcfData	.getRecords()
+										.skip(1)
+										.findFirst()
+										.get();
+
+		assertEquals("0/1", vcfRecord.getUniqueSampleFieldValue(SampleInfo.GT));
 
 	}
 

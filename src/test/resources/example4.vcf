@@ -1,0 +1,84 @@
+##fileformat=VCFv4.1
+##VariantDiscoveryPipelineVersion=1.0.0
+##AnnotationPipelineVersion=1.0.50
+##fileDate=20171109
+##center=NantOmics, LLC
+##source="Pedigree genotype analysis Pipeline v1.1"
+##reference=<ID=hg19,source="/opt/f3genomes/hg19/782bcb155e2a564d5c1d55fdccff4ac9/sequence/genome.fa">
+##phasing=none
+##INDIVIDUAL=c9b29f00-7682-409d-a8d3-1b18448b0255
+##SAMPLE=<ID=PROBAND,Individual="c9b29f00-7682-409d-a8d3-1b18448b0255",Description="Proband Sample",File="21dc647d-9fe5-4f22-a522-fbe629d85730.bam",Platform="Illumina",Analyte="DNA">
+##INFO=<ID=VC,Number=1,Type=String,Description="Variant classification">
+##INFO=<ID=ProtCh,Number=1,Type=String,Description="Protein change">
+##INFO=<ID=NN,Number=1,Type=String,Description="Next nucleotide in reference sequence">
+##INFO=<ID=DBA,Number=1,Type=String,Description="dbSNP annotated as clinically-associated and/or in OMIM">
+##INFO=<ID=SST,Number=1,Type=String,Description="Somatic status of variant">
+##INFO=<ID=DB,Number=0,Type=Flag,Description="Position overlaps dbSNP marker">
+##INFO=<ID=PC,Number=1,Type=Float,Description="PhastCons conservation score">
+##INFO=<ID=VT,Number=1,Type=String,Description="Variant Type">
+##INFO=<ID=PAF,Number=.,Type=String,Description="Population allele frequencies from dbSNP, formatted as comma-separated list of Allele/AF/N">
+##INFO=<ID=NP,Number=1,Type=Integer,Description="Number of samples in normal panel with variant">
+##INFO=<ID=Gene,Number=1,Type=String,Description="Hugo Symbol / UCSC Known Genes id">
+##INFO=<ID=PN,Number=1,Type=String,Description="Previous nucleotide in reference sequence">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total read depth for all samples at position">
+##FORMAT=<ID=AB,Number=.,Type=String,Description="Order of alleles">
+##FORMAT=<ID=LOD,Number=.,Type=Float,Description="Log odds of allele being real vs. due to sequencing error (in order specified by AB">
+##FORMAT=<ID=IDL,Number=.,Type=Integer,Description="Number of indels within 5bp of allele, not including indels counted in INS, DEL or D/I specified in genotype (in order specified by GT)">
+##FORMAT=<ID=FC,Number=1,Type=Integer,Description="Number of reads aligned to forward strand">
+##FORMAT=<ID=DEL,Number=1,Type=Integer,Description="Number of small deletions at this location">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Total Read Depth in Sample">
+##FORMAT=<ID=PW,Number=.,Type=Float,Description="Power calculation of sensitivity to detect variant allele (in order specified by AB)">
+##FORMAT=<ID=MDL,Number=.,Type=Float,Description="Median allele position from left end of read (in order specified by AB)">
+##FORMAT=<ID=MDM,Number=.,Type=Float,Description="MAD of allele position within read (in order specified by AB)">
+##FORMAT=<ID=LDR,Number=.,Type=Float,Description="Log odds of allele being real vs. due to sequencing error, reverse strand reads only (in order specified by AB)">
+##FORMAT=<ID=MDR,Number=.,Type=Float,Description="Median allele position from right end of read (in order specified by AB)">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Number of reads harboring allele (in order specified by AB)">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Phred-scaled Quality">
+##FORMAT=<ID=MQ0,Number=.,Type=Integer,Description="Number of mapping quality zero reads harboring allele (in order specified by AB)">
+##FORMAT=<ID=MMQS,Number=.,Type=Float,Description="Average mismatch quality sum of reads harboring allele (in order specified by AB)">
+##FORMAT=<ID=LDF,Number=.,Type=Float,Description="Log odds of allele being real vs. due to sequencing error, forward strand reads only (in order specified by AB)">
+##FORMAT=<ID=QS,Number=.,Type=Integer,Description="Base quality sum of alleles (in order specified by AB)">
+##FORMAT=<ID=PWR,Number=.,Type=Float,Description="Power calculation of sensitivity to detect variant allele, reverse strand reads only (in order specified by AB)">
+##FORMAT=<ID=MMQ,Number=.,Type=Integer,Description="Maximum mapping quality of read harboring allele (in order specified by AB)">
+##FORMAT=<ID=INS,Number=1,Type=Integer,Description="Number of small insertions at this location">
+##FORMAT=<ID=PWF,Number=.,Type=Float,Description="Power calculation of sensitivity to detect variant allele, forward strand reads only (in order specified by AB)">
+##FORMAT=<ID=CGIANN_VARNAME,Number=.,Type=String,Description="variantname">
+##FORMAT=<ID=CGIANN_1000GAF,Number=.,Type=String,Description="AlleleFrequencyof1000Genome">
+##FORMAT=<ID=CGIANN_ESP6500AF,Number=.,Type=String,Description="AlleleFrequencyofESP6500">
+##FILTER=<ID=tri,Description="Site has three alleles">
+##FILTER=<ID=end,Description="Alternate alleles clustered near ends of read">
+##FILTER=<ID=db,Description="(De novo only) Variant found in dbSNP">
+##FILTER=<ID=mq0,Description="> 50.0% MQ0 reads">
+##FILTER=<ID=idl,Description="3+ nearby indels, only count insertions for VT=DEL, and deletions for VT=INS">
+##FILTER=<ID=np,Description="(De novo only) Variant found in normal panel">
+##FILTER=<ID=mq,Description="No alternate allele on read with MQ > 20">
+##FILTER=<ID=ctl,Description="(De novo only) Alternate allele seen in >2 reads (or 3.0% of total reads) in mother / father">
+##FILTER=<ID=sb,Description="Strand bias">
+##FILTER=<ID=grm,Description="(De novo only) Normal failed more stringent test for dbSNP sites">
+##INFO=<ID=NewLen,Number=1,Type=Integer,Description="New protein length of Gene">
+##INFO=<ID=VC,Number=1,Type=String,Description="Variant classification">
+##INFO=<ID=ProtCh,Number=1,Type=String,Description="Protein change">
+##INFO=<ID=ExonTotal,Number=1,Type=Integer,Description="Total number of exons in Gene">
+##INFO=<ID=CC,Number=1,Type=String,Description="Coding change">
+##INFO=<ID=ExonStop,Number=1,Type=Integer,Description="Stop codon found in this exon">
+##INFO=<ID=DeltaProtSize,Number=1,Type=Integer,Description="Change in protein size">
+##INFO=<ID=Gene,Number=1,Type=String,Description="Hugo Symbol / UCSC Known Genes id">
+##INFO=<ID=OrigLen,Number=1,Type=Integer,Description="Original protein length of Gene">
+##INFO=<ID=DM,Number=1,Type=String,Description="Overlapping PFAM domain">
+##INFO=<ID=RN,Number=1,Type=Integer,Description="Number of downstream homolymer repeats matching indel">
+##INFO=<ID=SV_BINFO,Number=1,Type=String,Description="Block info for structural variant at POS, formatted as: Location/Downstream Object/Upstream Object/Strand of Gene/Phase of Intron ('.' if not applicable)">
+##INFO=<ID=SV_BINFO_ALT,Number=1,Type=String,Description="Block info for structural variant at ALT, formatted as: Location/Downstream Object/Upstream Object/Strand of Gene/Phase of Intron ('.' if not applicable)">
+##INFO=<ID=SV_EFF,Number=1,Type=String,Description="Effect of structural variant (Fusion, NearFusion, Interruption, ...)">
+##INFO=<ID=NT,Number=0,Type=Flag,Description="The region is not targeted by the enrichment chip.">
+##FILTER=<ID=rn,Description="High repeat region">
+##FILTER=<ID=nt,Description="Not targeted">
+##FILTER=<ID=lc,Description="Low quality region">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	55101705103780
+1	1	.	N	.	.	NT	END=69090;NT	GT	./.
+1	10108	rs62651026	C	CC	9	nt	VT=INS;SST=Single;DP=4;DB;DBA=NA;PAF=NA;NP=88;RN=0	GT:GQ:AB:DP:FC:INS:DEL:AD:QS:LOD:LDF:LDR:PW:PWF:PWR:MMQ:MMQS:IDL:MQ0:MDL:MDR:MDM:CGIANN_VARNAME:CGIANN_1000GAF:CGIANN_ESP6500AF	0/1:7:C,CC:4:4:3:1:1,3:12,87:0.00,9.18:0.00,4.30:0.00,4.88:0.00,0.85:0.00,0.85:0.00,0.99:16,42:198.0,180.3:0,0:0,0:82,110:68,39:0,1:-,NR_046018.2(DDX11L1) n.-1766_-1765insC:-,NOT_FOUND:-,NOT_FOUND
+1	12783	rs62635284	G	A	14	nt	VT=SNV;PN=C;NN=T;SST=Single;DP=5;DB;DBA=NA;PAF=NA;NP=33;Gene=DDX11L1/NR_046018.2/0;VC=NonCoding	GT:GQ:AB:DP:FC:INS:DEL:AD:QS:LOD:LDF:LDR:PW:PWF:PWR:MMQ:MMQS:IDL:MQ0:MDL:MDR:MDM:CGIANN_VARNAME:CGIANN_1000GAF:CGIANN_ESP6500AF	1/0:10:A,G:5:5:0:0:4,1:131,17:13.93,0.00:13.93,0.00:0.00,0.00:0.96,0.00:0.96,0.00:0.00,0.00:27,25:32.8,11.0:0,0:0,0:36,124:114,26:6,0:NR_046018.2(DDX11L1) n.463+62G>A,-:NOT_FOUND,-:NOT_FOUND,-
+1	13116	rs62635286	T	G	9	nt	VT=SNV;PN=G;NN=G;SST=Single;DP=10;DB;DBA=NA;PAF=T/0.903,G/0.09704;NP=4;Gene=DDX11L1/NR_046018.2/0;VC=NonCoding	GT:GQ:AB:DP:FC:INS:DEL:AD:QS:LOD:LDF:LDR:PW:PWF:PWR:MMQ:MMQS:IDL:MQ0:MDL:MDR:MDM:CGIANN_VARNAME:CGIANN_1000GAF:CGIANN_ESP6500AF	1/0:91:G,T:10:2:0:0:3,7:98,228:8.58,0.00:3.18,0.00:5.40,0.00:0.62,0.00:0.59,0.00:0.94,0.00:25,42:81.0,1.4:0,0:0,0:106,114:43,37:20,21:NR_046018.2(DDX11L1) n.464-105T>G,-:NOT_FOUND,-:NOT_FOUND,-
+1	13118	rs200579949	A	G	9	nt	VT=SNV;PN=G;NN=G;SST=Single;DP=10;DB;DBA=NA;PAF=NA;NP=11;Gene=DDX11L1/NR_046018.2/0;VC=NonCoding	GT:GQ:AB:DP:FC:INS:DEL:AD:QS:LOD:LDF:LDR:PW:PWF:PWR:MMQ:MMQS:IDL:MQ0:MDL:MDR:MDM:CGIANN_VARNAME:CGIANN_1000GAF:CGIANN_ESP6500AF	0/1:92:A,G:10:2:0:0:7,3:229,99:0.00,8.68:0.00,3.18:0.00,5.50:0.00,0.62:0.00,0.59:0.00,0.94:42,25:1.4,81.0:0,0:0,0:116,108:35,41:21,20:-,NR_046018.2(DDX11L1) n.464-103A>G:-,NOT_FOUND:-,NOT_FOUND
+1	14248	.	T	G	8	nt	VT=SNV;PN=C;NN=G;SST=Single;DP=8;Gene=DDX11L1/NR_046018.2/0;VC=NonCoding	GT:GQ:AB:DP:FC:INS:DEL:AD:QS:LOD:LDF:LDR:PW:PWF:PWR:MMQ:MMQS:IDL:MQ0:MDL:MDR:MDM:CGIANN_VARNAME:CGIANN_1000GAF:CGIANN_ESP6500AF	1/0:87:G,T:8:8:0:0:3,5:89,170:8.03,0.00:8.03,0.00:0.00,0.00:0.67,0.00:0.67,0.00:0.00,0.00:25,40:61.3,20.0:0,0:0,0:37,40:113,111:14,20:NR_046018.2(DDX11L1) n.1491T>G,-:NOT_FOUND,-:NOT_FOUND,-
+1	14354	.	C	A	13	nt	VT=SNV;PN=A;NN=G;SST=Single;DP=12;NP=1;Gene=DDX11L1/NR_046018.2/0;VC=NonCoding	GT:GQ:AB:DP:FC:INS:DEL:AD:QS:LOD:LDF:LDR:PW:PWF:PWR:MMQ:MMQS:IDL:MQ0:MDL:MDR:MDM:CGIANN_VARNAME:CGIANN_1000GAF:CGIANN_ESP6500AF	1/0:140:A,C:12:12:0:0:5,7:139,206:12.72,0.00:12.72,0.00:0.00,0.00:0.92,0.00:0.92,0.00:0.00,0.00:25,40:74.6,23.1:0,0:0,0:87,70:64,81:42,56:NR_046018.2(DDX11L1) n.1597C>A,-:NOT_FOUND,-:NOT_FOUND,-

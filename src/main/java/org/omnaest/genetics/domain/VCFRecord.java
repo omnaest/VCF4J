@@ -19,9 +19,13 @@
 package org.omnaest.genetics.domain;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.omnaest.utils.MapUtils;
 
 public class VCFRecord
 {
@@ -121,7 +125,7 @@ public class VCFRecord
 	 * Returns the INFO column
 	 * 
 	 * @see #getInfo(AdditionalInfo)
-	 * @see #getInfoAsMap()
+	 * @see #getParsedInfo()
 	 * @return
 	 */
 	public String getInfo()
@@ -129,17 +133,114 @@ public class VCFRecord
 		return this.info;
 	}
 
+	/**
+	 * Returns the format {@link String} like e.g. GT:GQ:AB:DP:FC:INS:DEL:AD:QS
+	 * 
+	 * @return
+	 */
 	public String getFormat()
 	{
 		return this.format;
 	}
 
+	/**
+	 * Returns the additional sample columns and their {@link String} value. Please consider using {@link #getParsedSampleFields()}.
+	 * 
+	 * @see #getParsedSampleFields()
+	 * @return
+	 */
 	public Map<String, String> getSampleFields()
 	{
 		return this.sampleFields;
 	}
 
-	public Map<String, String> getInfoAsMap()
+	/**
+	 * Returns a {@link List} of all values associated to the given {@link SampleInfo} field
+	 * 
+	 * @param sampleInfo
+	 * @return
+	 */
+	public List<String> getSampleFieldValues(SampleInfo sampleInfo)
+	{
+		return this	.getSampleField(sampleInfo)
+					.values()
+					.stream()
+					.distinct()
+					.collect(Collectors.toList());
+	}
+
+	public static class NonUniqueSampleFieldValueException extends IllegalStateException
+	{
+		private static final long serialVersionUID = -2326486880712988387L;
+
+		public NonUniqueSampleFieldValueException(String message)
+		{
+			super(message);
+		}
+	}
+
+	/**
+	 * Returns the unique value for the given {@link SampleInfo} over all samples. If there is more than one distinct value a
+	 * {@link NonUniqueSampleFieldValueException}
+	 * is thrown.
+	 * 
+	 * @param sampleInfo
+	 * @return
+	 */
+	public String getUniqueSampleFieldValue(SampleInfo sampleInfo)
+	{
+		List<String> sampleFieldValues = this.getSampleFieldValues(sampleInfo);
+		if (sampleFieldValues.size() > 1)
+		{
+			throw new NonUniqueSampleFieldValueException(sampleInfo + "->" + sampleFieldValues	.stream()
+																								.collect(Collectors.joining(",")));
+		}
+		return sampleFieldValues.stream()
+								.findFirst()
+								.orElse(null);
+	}
+
+	/**
+	 * Returns a {@link Map} of samples and the value of the given {@link SampleInfo} field
+	 * 
+	 * @param sampleInfo
+	 * @return
+	 */
+	public Map<String, String> getSampleField(SampleInfo sampleInfo)
+	{
+		return this	.getParsedSampleFields()
+					.entrySet()
+					.stream()
+					.collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry	.getValue()
+																						.get(sampleInfo.toString())));
+	}
+
+	/**
+	 * Returns the {@link #getSampleFields()} parsed using the given {@link #getFormat()} column
+	 * 
+	 * @return
+	 */
+	public Map<String, Map<String, String>> getParsedSampleFields()
+	{
+		List<String> formatKeys = org.omnaest.utils.StringUtils	.splitToStream(this.format, ":")
+																.collect(Collectors.toList());
+		Function<String, Map<String, String>> parsingFunction = value -> MapUtils	.builder()
+																					.putAll(formatKeys.stream(),
+																							org.omnaest.utils.StringUtils.splitToStream(value, ":"))
+																					.build();
+		return this	.getSampleFields()
+					.entrySet()
+					.stream()
+					.collect(Collectors.toMap(entry -> entry.getKey(), entry -> parsingFunction.apply(entry.getValue())));
+	}
+
+	/**
+	 * Returns the {@link #getInfo()} in a parsed format
+	 * 
+	 * @see #getInfo(AdditionalInfo)
+	 * @return
+	 */
+	public Map<String, String> getParsedInfo()
 	{
 		Map<String, String> retmap = new LinkedHashMap<>();
 
@@ -167,9 +268,42 @@ public class VCFRecord
 		Gene, AA, AC, AF, AN, BQ, CIGAR, DB, DP, END, H2, H3, MQ, MQ0, NS, SB, SOMATIC, VALIDATED
 	}
 
+	public enum SampleInfo
+	{
+		/** Order of alleles */
+		AB,
+		/** Log odds of allele being real vs. due to sequencing error (in order specified by AB */
+		LOD,
+		IDL,
+		/** Number of reads aligned to forward strand */
+		FC,
+		/** Number of small deletions at this location */
+		DEL,
+		/** Total Read Depth in Sample */
+		DP,
+		PW,
+		MDL,
+		MDM,
+		LDR,
+		MDR,
+		/** Genotype */
+		GT,
+		AD,
+		GQ,
+		MQ0,
+		MMQS,
+		LDF,
+		QS,
+		PWR,
+		MMQ,
+		/** Number of small insertions at this location */
+		INS,
+		PWF
+	}
+
 	public String getInfo(AdditionalInfo additionalInfo)
 	{
-		return this	.getInfoAsMap()
+		return this	.getParsedInfo()
 					.get(additionalInfo.name());
 	}
 
