@@ -68,7 +68,8 @@ public class VCFUtilsTest
 										.findFirst()
 										.get();
 
-		assertEquals("0/1", vcfRecord.getUniqueSampleFieldValue(SampleInfo.GT));
+		assertEquals("0/1", vcfRecord	.getParsedSampleFields()
+										.filterByFieldAsUniqueValue(SampleInfo.GT));
 
 	}
 

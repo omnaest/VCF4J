@@ -154,73 +154,54 @@ public class VCFRecord
 		return this.sampleFields;
 	}
 
-	/**
-	 * Returns a {@link List} of all values associated to the given {@link SampleInfo} field
-	 * 
-	 * @param sampleInfo
-	 * @return
-	 */
-	public List<String> getSampleFieldValues(SampleInfo sampleInfo)
+	public static interface SampleFields
 	{
-		return this	.getSampleField(sampleInfo)
-					.values()
-					.stream()
-					.distinct()
-					.collect(Collectors.toList());
-	}
-
-	public static class NonUniqueSampleFieldValueException extends IllegalStateException
-	{
-		private static final long serialVersionUID = -2326486880712988387L;
-
-		public NonUniqueSampleFieldValueException(String message)
+		public static class NonUniqueSampleFieldValueException extends IllegalStateException
 		{
-			super(message);
+			private static final long serialVersionUID = -2326486880712988387L;
+
+			public NonUniqueSampleFieldValueException(String message)
+			{
+				super(message);
+			}
 		}
+
+		/**
+		 * Returns a {@link Map} of samples and the value of the given {@link SampleInfo} field
+		 * 
+		 * @param sampleInfo
+		 * @return
+		 */
+		public Map<String, String> filterByField(SampleInfo sampleInfo);
+
+		/**
+		 * Returns a {@link List} of all values associated to the given {@link SampleInfo} field
+		 * 
+		 * @param sampleInfo
+		 * @return
+		 */
+		public List<String> filterByFieldAsValues(SampleInfo sampleInfo);
+
+		/**
+		 * Returns the unique value for the given {@link SampleInfo} over all samples. If there is more than one distinct value a
+		 * {@link NonUniqueSampleFieldValueException}
+		 * is thrown.
+		 * 
+		 * @param sampleInfo
+		 * @return
+		 */
+		public String filterByFieldAsUniqueValue(SampleInfo sampleInfo);
+
+		/**
+		 * Returns the {@link #getSampleFields()} parsed using the given {@link #getFormat()} column
+		 * 
+		 * @return
+		 */
+		public Map<String, Map<String, String>> get();
+
 	}
 
-	/**
-	 * Returns the unique value for the given {@link SampleInfo} over all samples. If there is more than one distinct value a
-	 * {@link NonUniqueSampleFieldValueException}
-	 * is thrown.
-	 * 
-	 * @param sampleInfo
-	 * @return
-	 */
-	public String getUniqueSampleFieldValue(SampleInfo sampleInfo)
-	{
-		List<String> sampleFieldValues = this.getSampleFieldValues(sampleInfo);
-		if (sampleFieldValues.size() > 1)
-		{
-			throw new NonUniqueSampleFieldValueException(sampleInfo + "->" + sampleFieldValues	.stream()
-																								.collect(Collectors.joining(",")));
-		}
-		return sampleFieldValues.stream()
-								.findFirst()
-								.orElse(null);
-	}
-
-	/**
-	 * Returns a {@link Map} of samples and the value of the given {@link SampleInfo} field
-	 * 
-	 * @param sampleInfo
-	 * @return
-	 */
-	public Map<String, String> getSampleField(SampleInfo sampleInfo)
-	{
-		return this	.getParsedSampleFields()
-					.entrySet()
-					.stream()
-					.collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry	.getValue()
-																						.get(sampleInfo.toString())));
-	}
-
-	/**
-	 * Returns the {@link #getSampleFields()} parsed using the given {@link #getFormat()} column
-	 * 
-	 * @return
-	 */
-	public Map<String, Map<String, String>> getParsedSampleFields()
+	public SampleFields getParsedSampleFields()
 	{
 		List<String> formatKeys = org.omnaest.utils.StringUtils	.splitToStream(this.format, ":")
 																.collect(Collectors.toList());
@@ -228,10 +209,55 @@ public class VCFRecord
 																					.putAll(formatKeys.stream(),
 																							org.omnaest.utils.StringUtils.splitToStream(value, ":"))
 																					.build();
-		return this	.getSampleFields()
-					.entrySet()
-					.stream()
-					.collect(Collectors.toMap(entry -> entry.getKey(), entry -> parsingFunction.apply(entry.getValue())));
+		Map<String, Map<String, String>> sampleToSampleFieldToValue = VCFRecord.this.getSampleFields()
+																					.entrySet()
+																					.stream()
+																					.collect(Collectors.toMap(	entry -> entry.getKey(),
+																												entry -> parsingFunction.apply(entry.getValue())));
+
+		return new SampleFields()
+		{
+
+			@Override
+			public Map<String, Map<String, String>> get()
+			{
+				return sampleToSampleFieldToValue;
+			}
+
+			@Override
+			public String filterByFieldAsUniqueValue(SampleInfo sampleInfo)
+			{
+				List<String> sampleFieldValues = this.filterByFieldAsValues(sampleInfo);
+				if (sampleFieldValues.size() > 1)
+				{
+					throw new NonUniqueSampleFieldValueException(sampleInfo + "->" + sampleFieldValues	.stream()
+																										.collect(Collectors.joining(",")));
+				}
+				return sampleFieldValues.stream()
+										.findFirst()
+										.orElse(null);
+			}
+
+			@Override
+			public List<String> filterByFieldAsValues(SampleInfo sampleInfo)
+			{
+				return this	.filterByField(sampleInfo)
+							.values()
+							.stream()
+							.distinct()
+							.collect(Collectors.toList());
+			}
+
+			@Override
+			public Map<String, String> filterByField(SampleInfo sampleInfo)
+			{
+				return this	.get()
+							.entrySet()
+							.stream()
+							.collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry	.getValue()
+																								.get(sampleInfo.toString())));
+			}
+		};
 	}
 
 	/**
