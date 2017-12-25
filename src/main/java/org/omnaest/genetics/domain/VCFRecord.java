@@ -18,6 +18,7 @@
 */
 package org.omnaest.genetics.domain;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,6 +167,30 @@ public class VCFRecord
 			}
 		}
 
+		public enum GenoType
+		{
+			/** 0/0 or 0 */
+			REFERENCE_BOTH("0/0", "0"),
+			/** 1/0 or 0/1 */
+			REFERENCE_AND_ALTERNATIVE("1/0", "0/1"),
+			/** 1/1 or 1 */
+			ALTERNATIVE_BOTH("1", "1/1");
+
+			private String[] matchingCodes;
+
+			private GenoType(String... matchingCodes)
+			{
+				this.matchingCodes = matchingCodes;
+			}
+
+			public boolean matches(String code)
+			{
+				return Arrays	.asList(matchingCodes)
+								.stream()
+								.anyMatch(icode -> StringUtils.equalsIgnoreCase(icode, code));
+			}
+		}
+
 		/**
 		 * Returns a {@link Map} of samples and the value of the given {@link SampleInfo} field
 		 * 
@@ -198,6 +223,14 @@ public class VCFRecord
 		 * @return
 		 */
 		public Map<String, Map<String, String>> get();
+
+		/**
+		 * Returns true if any {@link #filterByFieldAsValues(SampleInfo)} contains the given {@link GenoType}
+		 * 
+		 * @param genoType
+		 * @return
+		 */
+		public boolean hasGenoType(GenoType genoType);
 
 	}
 
@@ -246,6 +279,14 @@ public class VCFRecord
 							.stream()
 							.distinct()
 							.collect(Collectors.toList());
+			}
+
+			@Override
+			public boolean hasGenoType(GenoType genoType)
+			{
+				return this	.filterByFieldAsValues(SampleInfo.GT)
+							.stream()
+							.anyMatch(code -> genoType.matches(code));
 			}
 
 			@Override

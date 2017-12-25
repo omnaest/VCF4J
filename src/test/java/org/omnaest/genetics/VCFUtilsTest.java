@@ -19,6 +19,8 @@
 package org.omnaest.genetics;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.genetics.domain.VCFData;
 import org.omnaest.genetics.domain.VCFRecord;
+import org.omnaest.genetics.domain.VCFRecord.SampleFields.GenoType;
 import org.omnaest.genetics.domain.VCFRecord.SampleInfo;
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
@@ -70,7 +73,12 @@ public class VCFUtilsTest
 
 		assertEquals("0/1", vcfRecord	.getParsedSampleFields()
 										.filterByFieldAsUniqueValue(SampleInfo.GT));
-
+		assertTrue(vcfRecord.getParsedSampleFields()
+							.hasGenoType(GenoType.REFERENCE_AND_ALTERNATIVE));
+		assertFalse(vcfRecord	.getParsedSampleFields()
+								.hasGenoType(GenoType.REFERENCE_BOTH));
+		assertFalse(vcfRecord	.getParsedSampleFields()
+								.hasGenoType(GenoType.ALTERNATIVE_BOTH));
 	}
 
 	@Test
