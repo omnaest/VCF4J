@@ -25,9 +25,17 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.utils.MapUtils;
 
+/**
+ * Representation of a single record within a VCF file
+ * 
+ * @see #parseInfo()
+ * @see #parseSampleFields()
+ * @author omnaest
+ */
 public class VCFRecord
 {
     private String              chromosome;
@@ -126,7 +134,7 @@ public class VCFRecord
      * Returns the INFO column
      * 
      * @see #getInfo(AdditionalInfo)
-     * @see #getParsedInfo()
+     * @see #parseInfo()
      * @return
      */
     public String getInfo()
@@ -145,9 +153,9 @@ public class VCFRecord
     }
 
     /**
-     * Returns the additional sample columns and their {@link String} value. Please consider using {@link #getParsedSampleFields()}.
+     * Returns the additional sample columns and their {@link String} value. Please consider using {@link #parseSampleFields()}.
      * 
-     * @see #getParsedSampleFields()
+     * @see #parseSampleFields()
      * @return
      */
     public Map<String, String> getSampleFields()
@@ -232,9 +240,26 @@ public class VCFRecord
          */
         public boolean hasGenoType(GenoType genoType);
 
+        public enum Allele
+        {
+            REFERENCE, ALTERNATIVE
+        }
+
+        /**
+         * Returns the {@link Allele} depths (AD) if a unique sample is available
+         * 
+         * @return
+         */
+        public int resolveUniqueAlleleDepth(Allele allele);
+
     }
 
-    public SampleFields getParsedSampleFields()
+    /**
+     * Parses the {@link #getSampleFields()}
+     * 
+     * @return
+     */
+    public SampleFields parseSampleFields()
     {
         List<String> formatKeys = org.omnaest.utils.StringUtils.splitToStream(this.format, ":")
                                                                .collect(Collectors.toList());
@@ -300,6 +325,28 @@ public class VCFRecord
                            .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()
                                                                                             .get(sampleInfo.toString())));
             }
+
+            @Override
+            public int resolveUniqueAlleleDepth(Allele allele)
+            {
+                String alleleCode = Allele.REFERENCE.equals(allele) ? VCFRecord.this.getReference() : VCFRecord.this.getAlternativeAlleles();
+                return this.getAlleleToUniqueAlleleDepths()
+                           .getOrDefault(alleleCode, 0);
+            }
+
+            private Map<String, Integer> getAlleleToUniqueAlleleDepths()
+            {
+                List<Integer> values = org.omnaest.utils.StringUtils.splitToStream(this.filterByFieldAsUniqueValue(SampleInfo.AD), ",")
+                                                                    .map(value -> NumberUtils.toInt(value))
+                                                                    .collect(Collectors.toList());
+                List<String> keys = org.omnaest.utils.StringUtils.splitToStream(this.filterByFieldAsUniqueValue(SampleInfo.AB), ",")
+                                                                 .collect(Collectors.toList());
+
+                return MapUtils.builder()
+                               .putAll(keys, values)
+                               .build();
+            }
+
         };
     }
 
@@ -309,7 +356,7 @@ public class VCFRecord
      * @see #getInfo(AdditionalInfo)
      * @return
      */
-    public Map<String, String> getParsedInfo()
+    public Map<String, String> parseInfo()
     {
         Map<String, String> retmap = new LinkedHashMap<>();
 
@@ -372,7 +419,7 @@ public class VCFRecord
 
     public String getInfo(AdditionalInfo additionalInfo)
     {
-        return this.getParsedInfo()
+        return this.parseInfo()
                    .get(additionalInfo.name());
     }
 

@@ -31,6 +31,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.genetics.domain.VCFData;
 import org.omnaest.genetics.domain.VCFRecord;
+import org.omnaest.genetics.domain.VCFRecord.SampleFields.Allele;
 import org.omnaest.genetics.domain.VCFRecord.SampleFields.GenoType;
 import org.omnaest.genetics.domain.VCFRecord.SampleInfo;
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
@@ -41,183 +42,188 @@ import org.omnaest.utils.element.UnaryLeftAndRight;
 public class VCFUtilsTest
 {
 
-	@Test
-	@Ignore
-	public void testRead() throws Exception
-	{
-		VCFData vcfData = VCFUtils	.read()
-									.from(this	.getClass()
-												.getResourceAsStream("/example.vcf"))
-									.parse();
+    @Test
+    @Ignore
+    public void testRead() throws Exception
+    {
+        VCFData vcfData = VCFUtils.read()
+                                  .from(this.getClass()
+                                            .getResourceAsStream("/example.vcf"))
+                                  .parse();
 
-		vcfData	.getRecords()
-				.forEach(record ->
-				{
-					System.out.println(record);
-				});
+        vcfData.getRecords()
+               .forEach(record ->
+               {
+                   System.out.println(record);
+               });
 
-	}
+    }
 
-	@Test
-	public void testSampleInfo() throws Exception
-	{
-		VCFData vcfData = VCFUtils	.read()
-									.from(this	.getClass()
-												.getResourceAsStream("/example4.vcf"))
-									.parse();
+    @Test
+    public void testSampleInfo() throws Exception
+    {
+        VCFData vcfData = VCFUtils.read()
+                                  .from(this.getClass()
+                                            .getResourceAsStream("/example4.vcf"))
+                                  .parse();
 
-		VCFRecord vcfRecord = vcfData	.getRecords()
-										.skip(1)
-										.findFirst()
-										.get();
+        VCFRecord vcfRecord = vcfData.getRecords()
+                                     .skip(1)
+                                     .findFirst()
+                                     .get();
 
-		assertEquals("0/1", vcfRecord	.getParsedSampleFields()
-										.filterByFieldAsUniqueValue(SampleInfo.GT));
-		assertTrue(vcfRecord.getParsedSampleFields()
-							.hasGenoType(GenoType.REFERENCE_AND_ALTERNATIVE));
-		assertFalse(vcfRecord	.getParsedSampleFields()
-								.hasGenoType(GenoType.REFERENCE_BOTH));
-		assertFalse(vcfRecord	.getParsedSampleFields()
-								.hasGenoType(GenoType.ALTERNATIVE_BOTH));
-	}
+        assertEquals("0/1", vcfRecord.parseSampleFields()
+                                     .filterByFieldAsUniqueValue(SampleInfo.GT));
+        assertTrue(vcfRecord.parseSampleFields()
+                            .hasGenoType(GenoType.REFERENCE_AND_ALTERNATIVE));
+        assertFalse(vcfRecord.parseSampleFields()
+                             .hasGenoType(GenoType.REFERENCE_BOTH));
+        assertFalse(vcfRecord.parseSampleFields()
+                             .hasGenoType(GenoType.ALTERNATIVE_BOTH));
 
-	@Test
-	public void testReadAndStream() throws Exception
-	{
-		VCFData vcfData = VCFUtils	.read()
-									.from(this	.getClass()
-												.getResourceAsStream("/example2.vcf"))
-									.parse();
+        assertEquals(1, vcfRecord.parseSampleFields()
+                                 .resolveUniqueAlleleDepth(Allele.REFERENCE));
+        assertEquals(3, vcfRecord.parseSampleFields()
+                                 .resolveUniqueAlleleDepth(Allele.ALTERNATIVE));
+    }
 
-		NucleicAcidCodeSequence referenceSequence = NucleicAcidCodeSequence.valueOf("atCga".toUpperCase());
+    @Test
+    public void testReadAndStream() throws Exception
+    {
+        VCFData vcfData = VCFUtils.read()
+                                  .from(this.getClass()
+                                            .getResourceAsStream("/example2.vcf"))
+                                  .parse();
 
-		{
-			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.usingPrimaryAllele()
-																			.applyToChromosomeSequence("X", referenceSequence.stream())
-																			.collect(Collectors.toList()))
-															.toString();
-			assertEquals("atCga".toUpperCase(), mergeSequence);
-		}
-		{
-			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.usingPrimaryAllele()
-																			.applyToChromosomeSequence("1", referenceSequence.stream())
-																			.collect(Collectors.toList()))
-															.toString();
-			assertEquals("atGga".toUpperCase(), mergeSequence);
-		}
-		{
-			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.usingPrimaryAllele()
-																			.applyToChromosomeSequence("2", referenceSequence.stream())
-																			.collect(Collectors.toList()))
-															.toString();
-			assertEquals("atga".toUpperCase(), mergeSequence);
-		}
-		{
-			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.usingPrimaryAllele()
-																			.applyToChromosomeSequence("3", referenceSequence.stream())
-																			.collect(Collectors.toList()))
-															.toString();
-			assertEquals("atCAga".toUpperCase(), mergeSequence);
-		}
+        NucleicAcidCodeSequence referenceSequence = NucleicAcidCodeSequence.valueOf("atCga".toUpperCase());
 
-		{
-			AtomicLong position = new AtomicLong(1);
-			List<CodeAndPosition<NucleicAcidCode>> mergeSequence = vcfData	.applicator()
-																			.usingPrimaryAllele()
-																			.applyToChromosomeCodeAndPositionSequence("3", referenceSequence.stream()
-																																			.map(code -> new CodeAndPosition<NucleicAcidCode>(	code,
-																																																position.getAndIncrement())))
+        {
+            String mergeSequence = NucleicAcidCodeSequence.valueOf(vcfData.applicator()
+                                                                          .usingPrimaryAllele()
+                                                                          .applyToChromosomeSequence("X", referenceSequence.stream())
+                                                                          .collect(Collectors.toList()))
+                                                          .toString();
+            assertEquals("atCga".toUpperCase(), mergeSequence);
+        }
+        {
+            String mergeSequence = NucleicAcidCodeSequence.valueOf(vcfData.applicator()
+                                                                          .usingPrimaryAllele()
+                                                                          .applyToChromosomeSequence("1", referenceSequence.stream())
+                                                                          .collect(Collectors.toList()))
+                                                          .toString();
+            assertEquals("atGga".toUpperCase(), mergeSequence);
+        }
+        {
+            String mergeSequence = NucleicAcidCodeSequence.valueOf(vcfData.applicator()
+                                                                          .usingPrimaryAllele()
+                                                                          .applyToChromosomeSequence("2", referenceSequence.stream())
+                                                                          .collect(Collectors.toList()))
+                                                          .toString();
+            assertEquals("atga".toUpperCase(), mergeSequence);
+        }
+        {
+            String mergeSequence = NucleicAcidCodeSequence.valueOf(vcfData.applicator()
+                                                                          .usingPrimaryAllele()
+                                                                          .applyToChromosomeSequence("3", referenceSequence.stream())
+                                                                          .collect(Collectors.toList()))
+                                                          .toString();
+            assertEquals("atCAga".toUpperCase(), mergeSequence);
+        }
 
-																			.collect(Collectors.toList());
+        {
+            AtomicLong position = new AtomicLong(1);
+            List<CodeAndPosition<NucleicAcidCode>> mergeSequence = vcfData.applicator()
+                                                                          .usingPrimaryAllele()
+                                                                          .applyToChromosomeCodeAndPositionSequence("3", referenceSequence.stream()
+                                                                                                                                          .map(code -> new CodeAndPosition<NucleicAcidCode>(code,
+                                                                                                                                                                                            position.getAndIncrement())))
 
-			int ii = 0;
-			assertEquals(1, mergeSequence	.get(ii)
-											.getPosition());
-			assertEquals("a".toUpperCase(), mergeSequence	.get(ii++)
-															.getCode()
-															.toString());
-			assertEquals(2, mergeSequence	.get(ii)
-											.getPosition());
-			assertEquals("t".toUpperCase(), mergeSequence	.get(ii++)
-															.getCode()
-															.toString());
-			assertEquals(3, mergeSequence	.get(ii)
-											.getPosition());
-			assertEquals("C".toUpperCase(), mergeSequence	.get(ii++)
-															.getCode()
-															.toString());
-			assertEquals(4, mergeSequence	.get(ii)
-											.getPosition());
-			assertEquals("A".toUpperCase(), mergeSequence	.get(ii++)
-															.getCode()
-															.toString());
-			assertEquals(5, mergeSequence	.get(ii)
-											.getPosition());
-			assertEquals("g".toUpperCase(), mergeSequence	.get(ii++)
-															.getCode()
-															.toString());
-			assertEquals(6, mergeSequence	.get(ii)
-											.getPosition());
-			assertEquals("a".toUpperCase(), mergeSequence	.get(ii++)
-															.getCode()
-															.toString());
-		}
+                                                                          .collect(Collectors.toList());
 
-	}
+            int ii = 0;
+            assertEquals(1, mergeSequence.get(ii)
+                                         .getPosition());
+            assertEquals("a".toUpperCase(), mergeSequence.get(ii++)
+                                                         .getCode()
+                                                         .toString());
+            assertEquals(2, mergeSequence.get(ii)
+                                         .getPosition());
+            assertEquals("t".toUpperCase(), mergeSequence.get(ii++)
+                                                         .getCode()
+                                                         .toString());
+            assertEquals(3, mergeSequence.get(ii)
+                                         .getPosition());
+            assertEquals("C".toUpperCase(), mergeSequence.get(ii++)
+                                                         .getCode()
+                                                         .toString());
+            assertEquals(4, mergeSequence.get(ii)
+                                         .getPosition());
+            assertEquals("A".toUpperCase(), mergeSequence.get(ii++)
+                                                         .getCode()
+                                                         .toString());
+            assertEquals(5, mergeSequence.get(ii)
+                                         .getPosition());
+            assertEquals("g".toUpperCase(), mergeSequence.get(ii++)
+                                                         .getCode()
+                                                         .toString());
+            assertEquals(6, mergeSequence.get(ii)
+                                         .getPosition());
+            assertEquals("a".toUpperCase(), mergeSequence.get(ii++)
+                                                         .getCode()
+                                                         .toString());
+        }
 
-	@Test
-	public void testApplicator() throws Exception
-	{
-		VCFData vcfData = VCFUtils	.read()
-									.from(this	.getClass()
-												.getResourceAsStream("/example3.vcf"))
-									.parse();
+    }
 
-		NucleicAcidCodeSequence referenceSequence = NucleicAcidCodeSequence.valueOf("atCga".toUpperCase());
+    @Test
+    public void testApplicator() throws Exception
+    {
+        VCFData vcfData = VCFUtils.read()
+                                  .from(this.getClass()
+                                            .getResourceAsStream("/example3.vcf"))
+                                  .parse();
 
-		{
-			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.usingPrimaryAllele()
-																			.applyToChromosomeSequence("1", referenceSequence.stream())
-																			.collect(Collectors.toList()))
-															.toString();
-			assertEquals("atGga".toUpperCase(), mergeSequence);
-		}
-		{
-			String mergeSequence = NucleicAcidCodeSequence	.valueOf(vcfData.applicator()
-																			.usingSecondaryAllele()
-																			.applyToChromosomeSequence("1", referenceSequence.stream())
-																			.collect(Collectors.toList()))
-															.toString();
-			assertEquals("atAga".toUpperCase(), mergeSequence);
-		}
+        NucleicAcidCodeSequence referenceSequence = NucleicAcidCodeSequence.valueOf("atCga".toUpperCase());
 
-	}
+        {
+            String mergeSequence = NucleicAcidCodeSequence.valueOf(vcfData.applicator()
+                                                                          .usingPrimaryAllele()
+                                                                          .applyToChromosomeSequence("1", referenceSequence.stream())
+                                                                          .collect(Collectors.toList()))
+                                                          .toString();
+            assertEquals("atGga".toUpperCase(), mergeSequence);
+        }
+        {
+            String mergeSequence = NucleicAcidCodeSequence.valueOf(vcfData.applicator()
+                                                                          .usingSecondaryAllele()
+                                                                          .applyToChromosomeSequence("1", referenceSequence.stream())
+                                                                          .collect(Collectors.toList()))
+                                                          .toString();
+            assertEquals("atAga".toUpperCase(), mergeSequence);
+        }
 
-	@Test
-	public void testApplicatorPosition() throws Exception
-	{
-		VCFData vcfData = VCFUtils	.read()
-									.from(this	.getClass()
-												.getResourceAsStream("/example3.vcf"))
-									.parse();
+    }
 
-		Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = vcfData	.applicator()
-																							.getPositionToReplacementForChromosome("1");
+    @Test
+    public void testApplicatorPosition() throws Exception
+    {
+        VCFData vcfData = VCFUtils.read()
+                                  .from(this.getClass()
+                                            .getResourceAsStream("/example3.vcf"))
+                                  .parse();
 
-		assertEquals(1, positionToReplacement.size());
-		assertEquals("G", positionToReplacement	.get(3l)
-												.get(0)
-												.getRight()
-												.toString());
-		assertEquals("A", positionToReplacement	.get(3l)
-												.get(1)
-												.getRight()
-												.toString());
-	}
+        Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = vcfData.applicator()
+                                                                                           .getPositionToReplacementForChromosome("1");
+
+        assertEquals(1, positionToReplacement.size());
+        assertEquals("G", positionToReplacement.get(3l)
+                                               .get(0)
+                                               .getRight()
+                                               .toString());
+        assertEquals("A", positionToReplacement.get(3l)
+                                               .get(1)
+                                               .getRight()
+                                               .toString());
+    }
 
 }
