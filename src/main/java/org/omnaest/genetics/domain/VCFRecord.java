@@ -423,6 +423,21 @@ public class VCFRecord
                    .get(additionalInfo.name());
     }
 
+    /**
+     * Returns the gene from the {@link #getInfo(AdditionalInfo)} with the {@link AdditionalInfo#Gene} token if possible, otherwise returns null
+     * <br>
+     * <br>
+     * Example: "BHMT"
+     * 
+     * @return
+     */
+    public String getGene()
+    {
+        return StringUtils.upperCase(org.omnaest.utils.StringUtils.splitToStream(this.getInfo(AdditionalInfo.Gene), "/")
+                                                                  .findFirst()
+                                                                  .orElse(null));
+    }
+
     @Override
     public String toString()
     {
