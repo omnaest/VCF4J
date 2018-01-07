@@ -37,7 +37,7 @@ import org.omnaest.genetics.domain.VCFRecord.SampleInfo;
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
 import org.omnaest.genetics.translator.domain.NucleicAcidCodeSequence;
-import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 
 public class VCFUtilsTest
 {

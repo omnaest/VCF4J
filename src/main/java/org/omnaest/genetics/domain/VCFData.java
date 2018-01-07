@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
-import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 
 public interface VCFData
 {

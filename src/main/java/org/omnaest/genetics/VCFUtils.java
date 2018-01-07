@@ -47,7 +47,7 @@ import org.omnaest.genetics.translator.domain.NucleicAcidCode;
 import org.omnaest.utils.ConsumerUtils;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.StreamUtils;
-import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 
 /**
  * Utils regarding the variant call format<br>
