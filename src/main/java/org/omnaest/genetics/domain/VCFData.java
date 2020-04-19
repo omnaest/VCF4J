@@ -18,8 +18,8 @@
 */
 package org.omnaest.genetics.domain;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
@@ -29,76 +29,140 @@ import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 public interface VCFData
 {
 
-	public static interface GenomeApplicator
-	{
-		public static interface AlleleSpecificGenomeApplicator
-		{
-			/**
-			 * Applies the {@link VCFData} to a given {@link Stream} of {@link NucleicAcidCode}s and returns the recombined {@link Stream}.<br>
-			 * <br>
-			 * This is used to apply
-			 * the {@link VCFData} to its reference genome to recalculate the fasta data.
-			 * 
-			 * @param chromosome
-			 * @param sequence
-			 * @return
-			 */
-			public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence);
+    public static interface GenomeApplicator
+    {
+        public static interface AlleleSpecificGenomeApplicator
+        {
+            /**
+             * Applies the {@link VCFData} to a given {@link Stream} of {@link NucleicAcidCode}s and returns the recombined {@link Stream}.<br>
+             * <br>
+             * This is used to apply
+             * the {@link VCFData} to its reference genome to recalculate the fasta data.
+             * 
+             * @param chromosome
+             * @param sequence
+             * @return
+             */
+            public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence);
 
-			/**
-			 * Similar to {@link #applyToChromosomeSequence(String, Stream)} but with a {@link Stream} of {@link CodeAndPosition} as data source
-			 * 
-			 * @param chromosome
-			 * @param sequence
-			 * @return
-			 */
-			public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
-																										Stream<CodeAndPosition<NucleicAcidCode>> sequence);
-		}
+            /**
+             * Similar to {@link #applyToChromosomeSequence(String, Stream)} but with a {@link Stream} of {@link CodeAndPosition} as data source
+             * 
+             * @param chromosome
+             * @param sequence
+             * @return
+             */
+            public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(String chromosome,
+                                                                                                     Stream<CodeAndPosition<NucleicAcidCode>> sequence);
 
-		/**
-		 * Similar to {@link #usingAllele(int)} with value = 0
-		 * 
-		 * @return
-		 */
-		public AlleleSpecificGenomeApplicator usingPrimaryAllele();
+        }
 
-		/**
-		 * Similar to {@link #usingAllele(int)} with value = 1
-		 * 
-		 * @return
-		 */
-		public AlleleSpecificGenomeApplicator usingSecondaryAllele();
+        /**
+         * Similar to {@link #usingAllele(int)} with value = 0
+         * 
+         * @return
+         */
+        public AlleleSpecificGenomeApplicator usingPrimaryAllele();
 
-		/**
-		 * If multiple alleles are found for a single position this defines which one is used
-		 * 
-		 * @param allele
-		 *            = 0,1,...
-		 * @return
-		 */
-		public AlleleSpecificGenomeApplicator usingAllele(int allele);
+        /**
+         * Similar to {@link #usingAllele(int)} with value = 1
+         * 
+         * @return
+         */
+        public AlleleSpecificGenomeApplicator usingSecondaryAllele();
 
-		public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacementForChromosome(String chromosome);
+        /**
+         * If multiple alleles are found for a single position this defines which one is used
+         * 
+         * @param allele
+         *            = 0,1,...
+         * @return
+         */
+        public AlleleSpecificGenomeApplicator usingAllele(int allele);
 
-		public Stream<ChromosomeAndPositionReplacement> getPositionToReplacements();
+        public Map<Long, Replacements> getPositionToReplacementForChromosome(String chromosome);
 
-		public static interface ChromosomeAndPositionReplacement
-		{
-			public String getChromosome();
+        public Stream<ChromosomeAndPositionReplacement> getPositionToReplacements();
 
-			public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacement();
-		}
+        public static interface ChromosomeAndPositionReplacement
+        {
+            public String getChromosome();
 
-	}
+            public Map<Long, Replacements> getPositionToReplacement();
+        }
 
-	public Stream<VCFRecord> getRecords();
+        /**
+         * Returns the number of detected alleles
+         * 
+         * @return
+         */
+        public int getNumberOfAlleles();
+    }
 
-	/**
-	 * Returns the {@link GenomeApplicator} instance to apply the {@link VCFRecord}s to its reference genome
-	 * 
-	 * @return
-	 */
-	public GenomeApplicator applicator();
+    public static interface Replacements
+    {
+        public Set<UnaryLeftAndRight<NucleicAcidCode>> getReplacementForAllele(int allele);
+
+        public int getMaxAlleleIndex();
+
+        public boolean hasReplacementForAllele(int allele);
+    }
+
+    public static interface VCFMetaInfo
+    {
+        public static interface SampleInfos
+        {
+            public Set<String> getIds();
+
+            public Map<String, String> getSampleInfo(String id);
+
+        }
+
+        /**
+         * ##fileformat
+         * 
+         * @return
+         */
+        public String getFileFormat();
+
+        /**
+         * ##fileDate
+         * 
+         * @return
+         */
+        public String getFileDate();
+
+        /**
+         * ##reference
+         * 
+         * @return
+         */
+        public String getReference();
+
+        /**
+         * Returns the parsed reference genome identifier if possible
+         * 
+         * @return
+         */
+        public String getParsedHumanReferenceGenome();
+
+        /**
+         * ##SAMPLE
+         * 
+         * @return
+         */
+        public SampleInfos getSampleInfos();
+    }
+
+    public Stream<VCFRecord> getRecords();
+
+    /**
+     * Returns the {@link GenomeApplicator} instance to apply the {@link VCFRecord}s to its reference genome
+     * 
+     * @return
+     */
+    public GenomeApplicator applicator();
+
+    public VCFMetaInfo getMetaInfo();
 
 }

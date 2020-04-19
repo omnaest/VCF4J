@@ -21,33 +21,40 @@ package org.omnaest.genetics;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
+import org.omnaest.genetics.components.GenomeApplicatorImpl;
 import org.omnaest.genetics.components.VCFParserManager;
 import org.omnaest.genetics.components.parser.VCFParser;
 import org.omnaest.genetics.components.parser.VCFParser_4_1;
 import org.omnaest.genetics.domain.VCFData;
 import org.omnaest.genetics.domain.VCFRecord;
-import org.omnaest.genetics.translator.domain.CodeAndPosition;
-import org.omnaest.genetics.translator.domain.NucleicAcidCode;
-import org.omnaest.utils.ConsumerUtils;
+import org.omnaest.utils.IterableUtils;
 import org.omnaest.utils.ListUtils;
+import org.omnaest.utils.MatcherUtils;
+import org.omnaest.utils.MatcherUtils.Match;
+import org.omnaest.utils.PatternUtils;
 import org.omnaest.utils.StreamUtils;
-import org.omnaest.utils.element.lar.UnaryLeftAndRight;
+import org.omnaest.utils.element.bi.BiElement;
 
 /**
  * Utils regarding the variant call format<br>
@@ -56,312 +63,349 @@ import org.omnaest.utils.element.lar.UnaryLeftAndRight;
  * 
  * <pre>
  * VCFData vcfData = VCFUtils.read()
- * 							.from(new File("genome.vcf"))
- * 							.parse();
+ *                           .from(new File("genome.vcf"))
+ *                           .parse();
  * </pre>
  * 
  * @author omnaest
  */
 public class VCFUtils
 {
-	private static VCFParserManager parserManager = new VCFParserManager().register(new VCFParser_4_1());
+    private static VCFParserManager parserManager = new VCFParserManager().register(new VCFParser_4_1());
 
-	public static interface VCFReader
-	{
-		/**
-		 * Similar to {@link #from(File, Charset)} with {@link StandardCharsets#UTF_8}
-		 * 
-		 * @param file
-		 * @return
-		 * @throws FileNotFoundException
-		 */
-		public VCFReader from(File file) throws FileNotFoundException;
+    public static interface VCFReader
+    {
+        /**
+         * Similar to {@link #from(File, Charset)} with {@link StandardCharsets#UTF_8}
+         * 
+         * @param file
+         * @return
+         * @throws FileNotFoundException
+         */
+        public VCFReader from(File file) throws FileNotFoundException;
 
-		/**
-		 * Reads the {@link VCFRecord}s from a {@link File} with the given {@link Charset}
-		 * 
-		 * @param file
-		 * @param charset
-		 * @return
-		 * @throws FileNotFoundException
-		 */
-		public VCFReader from(File file, Charset charset) throws FileNotFoundException;
+        /**
+         * Reads the {@link VCFRecord}s from a {@link File} with the given {@link Charset}
+         * 
+         * @param file
+         * @param charset
+         * @return
+         * @throws FileNotFoundException
+         */
+        public VCFReader from(File file, Charset charset) throws FileNotFoundException;
 
-		/**
-		 * Reads the {@link VCFRecord}s from an {@link InputStream} using the given {@link Charset}
-		 * 
-		 * @param inputStream
-		 * @param charset
-		 * @return
-		 */
-		public VCFReader from(InputStream inputStream, Charset charset);
+        /**
+         * Reads the {@link VCFRecord}s from an {@link InputStream} using the given {@link Charset}
+         * 
+         * @param inputStream
+         * @param charset
+         * @return
+         */
+        public VCFReader from(InputStream inputStream, Charset charset);
 
-		/**
-		 * Similar to {@link #from(InputStream, Charset)} with {@link StandardCharsets#UTF_8}
-		 * 
-		 * @param inputStream
-		 * @return
-		 */
-		public VCFReader from(InputStream inputStream);
+        /**
+         * Similar to {@link #from(InputStream, Charset)} with {@link StandardCharsets#UTF_8}
+         * 
+         * @param inputStream
+         * @return
+         */
+        public VCFReader from(InputStream inputStream);
 
-		/**
-		 * Reads the {@link VCFRecord}s from a given {@link Reader}
-		 * 
-		 * @param reader
-		 * @return
-		 */
-		public VCFReader from(Reader reader);
+        /**
+         * Reads the {@link VCFRecord}s from a given {@link Reader}
+         * 
+         * @param reader
+         * @return
+         */
+        public VCFReader from(Reader reader);
 
-		/**
-		 * Parses the {@link VCFRecord}s and closes the underlying parser. This operation is not repeatable. This operation does not load the content into
-		 * memory an is implemented for large vcf file {@link Stream} processing.
-		 * 
-		 * @return
-		 */
-		public Stream<VCFRecord> parseOnce();
+        /**
+         * Reads the {@link VCFRecord}s from a given {@link String}
+         * 
+         * @param vcfContent
+         * @return
+         */
+        public VCFReader from(String vcfContent);
 
-		/**
-		 * Parses the {@link VCFRecord}s and constructs an in memory {@link VCFData} instance with the complete content
-		 * 
-		 * @return
-		 */
-		public VCFData parse();
-	}
+        /**
+         * Parses the {@link VCFRecord}s and closes the underlying parser. This operation is not repeatable. This operation does not load the content into
+         * memory an is implemented for large vcf file {@link Stream} processing.
+         * 
+         * @return
+         */
+        public Stream<VCFRecord> parseOnce();
 
-	public static VCFReader read()
-	{
-		return new VCFReader()
-		{
-			private Reader reader;
+        /**
+         * Parses the {@link VCFRecord}s and constructs an in memory {@link VCFData} instance with the complete content
+         * 
+         * @return
+         */
+        public VCFData parse();
 
-			@Override
-			public VCFReader from(File file) throws FileNotFoundException
-			{
-				return this.from(file, StandardCharsets.UTF_8);
+    }
 
-			}
+    public static VCFReader read()
+    {
+        return new VCFReader()
+        {
+            private Reader reader;
 
-			@Override
-			public VCFReader from(File file, Charset charset) throws FileNotFoundException
-			{
-				return this.from(new FileInputStream(file), charset);
-			}
+            @Override
+            public VCFReader from(File file) throws FileNotFoundException
+            {
+                return this.from(file, StandardCharsets.UTF_8);
 
-			@Override
-			public VCFReader from(InputStream inputStream, Charset charset)
-			{
-				return this.from(new InputStreamReader(inputStream, charset));
-			}
+            }
 
-			@Override
-			public VCFReader from(InputStream inputStream)
-			{
-				return this.from(inputStream, StandardCharsets.UTF_8);
-			}
+            @Override
+            public VCFReader from(File file, Charset charset) throws FileNotFoundException
+            {
+                return this.from(new FileInputStream(file), charset);
+            }
 
-			@Override
-			public VCFReader from(Reader reader)
-			{
-				this.reader = reader;
-				return this;
-			}
+            @Override
+            public VCFReader from(InputStream inputStream, Charset charset)
+            {
+                return this.from(new InputStreamReader(inputStream, charset));
+            }
 
-			@Override
-			public VCFData parse()
-			{
-				Map<String, List<VCFRecord>> chromosomeToRecords = this	.parseOnce()
-																		.collect(Collectors.groupingBy(record -> StringUtils.upperCase(record.getChromosome())));
+            @Override
+            public VCFReader from(InputStream inputStream)
+            {
+                return this.from(inputStream, StandardCharsets.UTF_8);
+            }
 
-				return new VCFData()
-				{
-					@Override
-					public Stream<VCFRecord> getRecords()
-					{
-						return chromosomeToRecords	.values()
-													.stream()
-													.flatMap(records -> records.stream());
-					}
+            @Override
+            public VCFReader from(Reader reader)
+            {
+                this.reader = reader;
+                return this;
+            }
 
-					@Override
-					public GenomeApplicator applicator()
-					{
-						return new GenomeApplicator()
-						{
-							@Override
-							public AlleleSpecificGenomeApplicator usingSecondaryAllele()
-							{
-								return this.usingAllele(1);
-							}
+            @Override
+            public VCFReader from(String vcfContent)
+            {
+                return this.from(new StringReader(vcfContent));
+            }
 
-							@Override
-							public AlleleSpecificGenomeApplicator usingPrimaryAllele()
-							{
-								return this.usingAllele(0);
-							}
+            @Override
+            public VCFData parse()
+            {
+                BiElement<Stream<VCFRecord>, Map<String, List<String>>> recordsWithComments = this.parseOnceWithComments();
+                Map<String, List<VCFRecord>> chromosomeToRecords = recordsWithComments.getFirst()
+                                                                                      .collect(Collectors.groupingBy(record -> StringUtils.replaceAll(StringUtils.upperCase(record.getChromosome()),
+                                                                                                                                                      "CHR",
+                                                                                                                                                      "")));
+                Map<String, List<String>> comments = recordsWithComments.getSecond();
 
-							@Override
-							public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacementForChromosome(String chromosome)
-							{
-								return this.determinePositionToReplacement(chromosomeToRecords.getOrDefault(StringUtils.upperCase(chromosome),
-																											Collections.emptyList()));
-							}
+                return new VCFData()
+                {
+                    @Override
+                    public Stream<VCFRecord> getRecords()
+                    {
+                        return chromosomeToRecords.values()
+                                                  .stream()
+                                                  .flatMap(records -> records.stream());
+                    }
 
-							@Override
-							public Stream<ChromosomeAndPositionReplacement> getPositionToReplacements()
-							{
-								return chromosomeToRecords	.keySet()
-															.stream()
-															.map(chromosome -> new ChromosomeAndPositionReplacement()
-															{
-																@Override
-																public Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> getPositionToReplacement()
-																{
-																	return getPositionToReplacementForChromosome(chromosome);
-																}
+                    @Override
+                    public GenomeApplicator applicator()
+                    {
+                        return new GenomeApplicatorImpl(chromosomeToRecords);
+                    }
 
-																@Override
-																public String getChromosome()
-																{
-																	return chromosome;
-																}
-															});
-							}
+                    @Override
+                    public VCFMetaInfo getMetaInfo()
+                    {
+                        return new VCFMetaInfo()
+                        {
+                            @Override
+                            public String getReference()
+                            {
+                                return ListUtils.first(comments.get("reference"));
+                            }
 
-							private Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> determinePositionToReplacement(List<VCFRecord> records)
-							{
-								Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = new ConcurrentHashMap<>();
+                            @Override
+                            public String getParsedHumanReferenceGenome()
+                            {
+                                String reference = this.getReference();
+                                Optional<Stream<Match>> matches = PatternUtils.matcher()
+                                                                              .of(Pattern.compile("hg[0-9]+|GRCH[0-9]+", Pattern.CASE_INSENSITIVE))
+                                                                              .findIn(reference);
+                                if (!matches.isPresent())
+                                {
+                                    return null;
+                                }
+                                else
+                                {
+                                    return matches.get()
+                                                  .findFirst()
+                                                  .get()
+                                                  .getMatchRegion();
+                                }
+                            }
 
-								if (records != null)
-								{
-									for (VCFRecord vcfRecord : records)
-									{
-										String reference = vcfRecord.getReference();
-										String alternativeAlleles = vcfRecord.getAlternativeAlleles();
-										long position = NumberUtils.toLong(vcfRecord.getPosition());
+                            @Override
+                            public String getFileFormat()
+                            {
+                                return ListUtils.first(comments.get("fileformat"));
+                            }
 
-										for (int ii = 0; ii < reference.length() || ii < alternativeAlleles.length(); ii++)
-										{
-											long currentPosition = position + ii;
-											NucleicAcidCode left = ii < reference.length() ? NucleicAcidCode.valueOf(reference.charAt(ii)) : null;
-											NucleicAcidCode right = ii < alternativeAlleles.length() ? NucleicAcidCode.valueOf(alternativeAlleles.charAt(ii))
-													: null;
-											positionToReplacement	.computeIfAbsent(currentPosition, c -> new ArrayList<>())
-																	.add(new UnaryLeftAndRight<NucleicAcidCode>(left, right));
-										}
-									}
-								}
+                            @Override
+                            public String getFileDate()
+                            {
+                                return ListUtils.first(comments.get("fileDate"));
+                            }
 
-								return positionToReplacement;
-							}
+                            @Override
+                            public SampleInfos getSampleInfos()
+                            {
+                                Map<String, Map<String, String>> retmap = new LinkedHashMap<>();
 
-							@Override
-							public AlleleSpecificGenomeApplicator usingAllele(int allele)
-							{
-								return new AlleleSpecificGenomeApplicator()
-								{
+                                String sampleStr = ListUtils.first(comments.get("SAMPLE"));
 
-									@Override
-									public Stream<NucleicAcidCode> applyToChromosomeSequence(String chromosome, Stream<NucleicAcidCode> sequence)
-									{
-										AtomicLong position = new AtomicLong(1);
-										return this	.applyToChromosomeCodeAndPositionSequence(	chromosome,
-																								sequence.map(code -> new CodeAndPosition<>(	code,
-																																			position.getAndIncrement())))
-													.map(cap -> cap.getCode());
-									}
+                                MatcherUtils.matcher()
+                                            .of(Pattern.compile("\\<([^\\>]*)\\>"))
+                                            .findIn(sampleStr)
+                                            .ifPresent(matches ->
+                                            {
+                                                matches.forEach(match ->
+                                                {
+                                                    String singleSampleStr = match.getSubGroupsAsStream()
+                                                                                  .findFirst()
+                                                                                  .orElse(null);
+                                                    Map<String, String> sampleMap = new LinkedHashMap<>();
+                                                    org.omnaest.utils.StringUtils.splitToStream(singleSampleStr, ",")
+                                                                                 .forEach(keyAndValue ->
+                                                                                 {
+                                                                                     MatcherUtils.matcher()
+                                                                                                 .of(Pattern.compile("([^\\=]+)\\=(.*)"))
+                                                                                                 .matchAgainst(keyAndValue)
+                                                                                                 .map(keyAndValueMatch -> keyAndValueMatch.getGroups())
+                                                                                                 .ifPresent(keyAndValueMatchGroups ->
+                                                                                                 {
+                                                                                                     String key = keyAndValueMatchGroups.get(1);
+                                                                                                     String value = keyAndValueMatchGroups.get(2);
 
-									@Override
-									public Stream<CodeAndPosition<NucleicAcidCode>> applyToChromosomeCodeAndPositionSequence(	String chromosome,
-																																Stream<CodeAndPosition<NucleicAcidCode>> sequence)
-									{
-										Map<Long, List<UnaryLeftAndRight<NucleicAcidCode>>> positionToReplacement = getPositionToReplacementForChromosome(chromosome);
+                                                                                                     sampleMap.put(key, value);
+                                                                                                 });
+                                                                                 });
 
-										AtomicLong position = new AtomicLong(-1);
-										return sequence	.peek(ConsumerUtils.consumeOnce(code ->
-										{
-											if (position.get() < 0)
-											{
-												position.set(Math.max(1, code.getPosition()));
-											}
-										}))
-														.flatMap(code ->
-														{
-															//
-															Stream<NucleicAcidCode> retval = Stream.of(code.getCode());
+                                                    String id = sampleMap.get("ID");
+                                                    retmap.put(id, sampleMap);
+                                                });
+                                            });
 
-															//
-															long currentPosition = code.getPosition();
-															List<UnaryLeftAndRight<NucleicAcidCode>> replacements = positionToReplacement.get(currentPosition);
-															if (replacements != null)
-															{
-																UnaryLeftAndRight<NucleicAcidCode> replacement = ListUtils.get(replacements, allele);
+                                return new SampleInfos()
+                                {
+                                    @Override
+                                    public Map<String, String> getSampleInfo(String id)
+                                    {
+                                        return retmap.get(id);
+                                    }
 
-																if (replacement != null)
-																{
-																	NucleicAcidCode referenceCode = replacement.getLeft();
-																	NucleicAcidCode replacementCode = replacement.getRight();
+                                    @Override
+                                    public Set<String> getIds()
+                                    {
+                                        return retmap.keySet();
+                                    }
+                                };
+                            }
+                        };
+                    }
 
-																	if (referenceCode == null)
-																	{
-																		retval = Stream.of(replacementCode, code.getCode());
-																	}
-																	else
-																	{
-																		//
-																		this.assertReferenceCodeMatches(code.getCode(), currentPosition, referenceCode);
+                };
+            }
 
-																		//
-																		if (replacementCode == null)
-																		{
-																			retval = Stream.empty();
-																		}
-																		else
-																		{
-																			retval = Stream.of(replacementCode);
-																		}
-																	}
-																}
-															}
+            @Override
+            public Stream<VCFRecord> parseOnce()
+            {
+                return this.parseOnceWithComments()
+                           .getFirst();
 
-															return retval.map(c -> new CodeAndPosition<>(c, position.getAndIncrement()));
-														});
-									}
+            }
 
-									private void assertReferenceCodeMatches(NucleicAcidCode code, long currentPosition, NucleicAcidCode referenceCode)
-									{
-										if (!code.equals(referenceCode))
-										{
-											throw new IllegalStateException("Reference code did not match: " + code + "<->" + referenceCode + " at position: "
-													+ currentPosition);
-										}
-									}
-								};
-							}
+            public BiElement<Stream<VCFRecord>, Map<String, List<String>>> parseOnceWithComments()
+            {
+                Stream<String> lines = StreamUtils.fromReaderAsLines(this.reader)
+                                                  .filter(line -> !StringUtils.isBlank(line));
 
-						};
-					}
+                VCFParser parser = parserManager.getInstance(lines);
 
-				};
-			}
+                return BiElement.of(parser.getRecords(), parser.getComments());
 
-			@Override
-			public Stream<VCFRecord> parseOnce()
-			{
-				Stream<String> lines = StreamUtils	.fromReader(this.reader)
-													.filter(line -> !StringUtils.isBlank(line));
+            }
 
-				VCFParser parser = parserManager.getInstance(lines);
+        };
+    }
 
-				return parser.getRecords();
+    public static VCFParserManager getParserManager()
+    {
+        return parserManager;
+    }
 
-			}
+    public static interface VCFWriter
+    {
 
-		};
-	}
+        void into(Writer writer) throws IOException;
 
-	public static VCFParserManager getParserManager()
-	{
-		return parserManager;
-	}
+        void into(File file) throws IOException;
+
+        void into(File file, Charset encoding) throws IOException;
+
+    }
+
+    public static VCFWriter write(Stream<VCFRecord> vcfData)
+    {
+        return new VCFWriter()
+        {
+            @Override
+            public void into(Writer writer) throws IOException
+            {
+                //
+                writer.write("##fileformat=VCFv4.3\n");
+                writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t000000001\n");
+
+                //
+                for (VCFRecord record : IterableUtils.from(vcfData.iterator()))
+                {
+                    List<String> list = new ArrayList<>();
+
+                    list.add(record.getChromosome());
+                    list.add(record.getPosition());
+                    list.add(record.getId());
+                    list.add(record.getReference());
+                    list.add(record.getAlternativeAlleles());
+                    list.add(record.getQuality());
+                    list.add(record.getFilter());
+                    list.add(record.getInfo());
+                    list.add(record.getFormat());
+                    list.addAll(record.getSampleFields()
+                                      .values());
+
+                    writer.write(list.stream()
+                                     .collect(Collectors.joining("\t")));
+                    writer.write("\n");
+                }
+
+                //
+                writer.flush();
+                writer.close();
+            }
+
+            @Override
+            public void into(File file, Charset encoding) throws IOException
+            {
+                FileUtils.forceMkdirParent(file);
+                this.into(new FileWriterWithEncoding(file, encoding));
+            }
+
+            @Override
+            public void into(File file) throws IOException
+            {
+                this.into(file, StandardCharsets.UTF_8);
+            }
+        };
+    }
 
 }

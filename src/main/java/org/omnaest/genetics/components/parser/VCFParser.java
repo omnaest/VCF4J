@@ -18,6 +18,8 @@
 */
 package org.omnaest.genetics.components.parser;
 
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.omnaest.genetics.domain.VCFRecord;
@@ -25,6 +27,8 @@ import org.omnaest.genetics.domain.VCFRecord;
 public interface VCFParser
 {
 
-	public Stream<VCFRecord> getRecords();
+    public Stream<VCFRecord> getRecords();
+
+    public Map<String, List<String>> getComments();
 
 }

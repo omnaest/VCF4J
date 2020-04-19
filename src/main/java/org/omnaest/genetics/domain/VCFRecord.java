@@ -19,6 +19,7 @@
 package org.omnaest.genetics.domain;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.omnaest.utils.CollectorUtils;
 import org.omnaest.utils.MapUtils;
+import org.omnaest.utils.StreamUtils;
 
 /**
  * Representation of a single record within a VCF file
@@ -182,7 +185,15 @@ public class VCFRecord
             /** 1/0 or 0/1 */
             REFERENCE_AND_ALTERNATIVE("1/0", "0/1"),
             /** 1/1 or 1 */
-            ALTERNATIVE_BOTH("1", "1/1");
+            ALTERNATIVE_BOTH("1", "1/1"),
+            /**
+             * 1/0
+             */
+            FIRST_ALLELE_ALTERNATIVE("1/0"),
+            /**
+             * 0/1
+             */
+            SECOND_ALLELE_ALTERNATIVE("0/1");
 
             private String[] matchingCodes;
 
@@ -251,6 +262,13 @@ public class VCFRecord
          * @return
          */
         public int resolveUniqueAlleleDepth(Allele allele);
+
+        /**
+         * Returns the coverage depth (DP)
+         * 
+         * @return
+         */
+        public int resolveUniqueCoverageDepth();
 
     }
 
@@ -334,6 +352,12 @@ public class VCFRecord
                            .getOrDefault(alleleCode, 0);
             }
 
+            @Override
+            public int resolveUniqueCoverageDepth()
+            {
+                return NumberUtils.toInt(this.filterByFieldAsUniqueValue(SampleInfo.DP));
+            }
+
             private Map<String, Integer> getAlleleToUniqueAlleleDepths()
             {
                 List<Integer> values = org.omnaest.utils.StringUtils.splitToStream(this.filterByFieldAsUniqueValue(SampleInfo.AD), ",")
@@ -381,7 +405,12 @@ public class VCFRecord
 
     public enum AdditionalInfo
     {
-        Gene, AA, AC, AF, AN, BQ, CIGAR, DB, DP, END, H2, H3, MQ, MQ0, NS, SB, SOMATIC, VALIDATED
+        Gene, ANN, LOF, AA, AC, AF, AN, BQ, CIGAR, DB, DP, END, H2, H3, MQ, MQ0, NS, SB, SOMATIC, VALIDATED
+    }
+
+    public enum Annotation
+    {
+        Allele, Annotation, Annotation_Impact, Gene_Name, Gene_ID, Feature_Type, Feature_ID, Transcript_BioType, Rank
     }
 
     public enum SampleInfo
@@ -433,9 +462,72 @@ public class VCFRecord
      */
     public String getGene()
     {
-        return StringUtils.upperCase(org.omnaest.utils.StringUtils.splitToStream(this.getInfo(AdditionalInfo.Gene), "/")
-                                                                  .findFirst()
-                                                                  .orElse(null));
+        String gene = StringUtils.upperCase(org.omnaest.utils.StringUtils.splitToStream(this.getInfo(AdditionalInfo.Gene), "/")
+                                                                         .findFirst()
+                                                                         .orElse(null));
+        if (StringUtils.isBlank(gene))
+        {
+            gene = StringUtils.upperCase(this.getAnnotation()
+                                             .get("Gene_Name"));
+        }
+        return gene;
+    }
+
+    public boolean hasGene()
+    {
+        return StringUtils.isNotBlank(this.getGene());
+    }
+
+    public String getAnnotation(Annotation annotation)
+    {
+        return this.getAnnotation()
+                   .get(annotation.name());
+    }
+
+    public Map<String, String> getAnnotation()
+    {
+        Map<String, String> retmap = Collections.emptyMap();
+
+        String annotation = this.getInfo(AdditionalInfo.ANN);
+        if (StringUtils.isNotBlank(annotation))
+        {
+            List<String> headers = Arrays.asList("Allele", "Annotation", "Annotation_Impact", "Gene_Name", "Gene_ID", "Feature_Type", "Feature_ID",
+                                                 "Transcript_BioType", "Rank", "HGVS.c", "HGVS.p", "cDNA.pos / cDNA.length", "CDS.pos / CDS.length",
+                                                 "AA.pos / AA.length", "Distance", "ERRORS / WARNINGS / INFO");
+
+            retmap = StreamUtils.merge2(headers.stream(), org.omnaest.utils.StringUtils.splitToStream(annotation, "|"))
+                                .filter(element -> element.getFirst() != null)
+                                .filter(element -> element.getSecond() != null)
+                                .collect(CollectorUtils.toMapByBiElement(() -> new LinkedHashMap<>()));
+        }
+
+        return retmap;
+    }
+
+    public double getLossOfFunctionPrediction()
+    {
+        return NumberUtils.toDouble(this.getLossOfFunctionPredictionInfo()
+                                        .get("Percent_of_transcripts_affected"));
+    }
+
+    public Map<String, String> getLossOfFunctionPredictionInfo()
+    {
+        Map<String, String> retmap = Collections.emptyMap();
+
+        String lossOfFunctionField = this.getInfo(AdditionalInfo.LOF);
+        if (StringUtils.isNotBlank(lossOfFunctionField))
+        {
+            List<String> headers = Arrays.asList("Gene_Name", "Gene_ID", "Number_of_transcripts_in_gene", "Percent_of_transcripts_affected");
+
+            lossOfFunctionField = lossOfFunctionField.replaceAll("^\\(", "")
+                                                     .replaceAll("\\)$", "");
+            retmap = StreamUtils.merge2(headers.stream(), org.omnaest.utils.StringUtils.splitToStream(lossOfFunctionField, "|"))
+                                .filter(element -> element.getFirst() != null)
+                                .filter(element -> element.getSecond() != null)
+                                .collect(CollectorUtils.toMapByBiElement(() -> new LinkedHashMap<>()));
+        }
+
+        return retmap;
     }
 
     @Override
@@ -449,6 +541,31 @@ public class VCFRecord
     public boolean hasInfo(AdditionalInfo additionalInfo)
     {
         return this.getInfo(additionalInfo) != null;
+    }
+
+    public long getPositionAsLong()
+    {
+        return NumberUtils.toLong(this.getPosition());
+    }
+
+    public boolean hasInsertion()
+    {
+        int referenceLength = this.getReference()
+                                  .length();
+        return org.omnaest.utils.StringUtils.splitToStream(this.getAlternativeAlleles(), ",")
+                                            .map(String::trim)
+                                            .mapToInt(String::length)
+                                            .anyMatch(alleleLength -> alleleLength > referenceLength);
+    }
+
+    public boolean hasDeletion()
+    {
+        int referenceLength = this.getReference()
+                                  .length();
+        return org.omnaest.utils.StringUtils.splitToStream(this.getAlternativeAlleles(), ",")
+                                            .map(String::trim)
+                                            .mapToInt(String::length)
+                                            .anyMatch(alleleLength -> alleleLength < referenceLength);
     }
 
 }
