@@ -16,22 +16,19 @@
 
 
 */
-package org.omnaest.genetics.components.parser;
+package org.omnaest.genetics.vcf.components.parser;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
-public interface VCFParserFactory
+import org.omnaest.genetics.vcf.domain.VCFRecord;
+
+public interface VCFParser
 {
-	public interface VCFParserFactoryWithHeader
-	{
-		public boolean canHandle();
 
-		public VCFParser createInstance(Stream<String> lines);
-	}
+    public Stream<VCFRecord> getRecords();
 
-	public double getVersion();
-
-	public VCFParserFactoryWithHeader withHeaders(List<String> headers);
+    public Map<String, List<String>> getComments();
 
 }

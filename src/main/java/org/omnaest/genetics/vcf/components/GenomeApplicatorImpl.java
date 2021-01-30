@@ -1,4 +1,4 @@
-package org.omnaest.genetics.components;
+package org.omnaest.genetics.vcf.components;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,13 +12,13 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.omnaest.genetics.domain.VCFData.GenomeApplicator;
-import org.omnaest.genetics.domain.VCFData.Replacements;
-import org.omnaest.genetics.domain.VCFRecord;
-import org.omnaest.genetics.domain.VCFRecord.SampleFields;
-import org.omnaest.genetics.domain.VCFRecord.SampleFields.GenoType;
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
+import org.omnaest.genetics.vcf.domain.VCFRecord;
+import org.omnaest.genetics.vcf.domain.VCFData.GenomeApplicator;
+import org.omnaest.genetics.vcf.domain.VCFData.Replacements;
+import org.omnaest.genetics.vcf.domain.VCFRecord.SampleFields;
+import org.omnaest.genetics.vcf.domain.VCFRecord.SampleFields.GenoType;
 import org.omnaest.utils.ConsumerUtils;
 import org.omnaest.utils.SetUtils;
 import org.omnaest.utils.element.lar.UnaryLeftAndRight;

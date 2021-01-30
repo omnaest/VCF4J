@@ -16,19 +16,22 @@
 
 
 */
-package org.omnaest.genetics.domain;
+package org.omnaest.genetics.vcf.domain;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.utils.CollectorUtils;
+import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.StreamUtils;
 
@@ -392,9 +395,9 @@ public class VCFRecord
                 for (String pair : pairs)
                 {
                     String[] keyAndValue = StringUtils.splitPreserveAllTokens(pair, "=");
-                    if (keyAndValue != null && keyAndValue.length == 2)
+                    if (keyAndValue != null && keyAndValue.length >= 1)
                     {
-                        retmap.put(keyAndValue[0], keyAndValue[1]);
+                        retmap.put(keyAndValue[0], keyAndValue.length >= 2 ? keyAndValue[1] : null);
                     }
                 }
             }
@@ -405,7 +408,44 @@ public class VCFRecord
 
     public enum AdditionalInfo
     {
-        Gene, ANN, LOF, AA, AC, AF, AN, BQ, CIGAR, DB, DP, END, H2, H3, MQ, MQ0, NS, SB, SOMATIC, VALIDATED
+        Gene,
+        ANN,
+        LOF,
+        AA,
+        AC,
+        AF,
+        AN,
+        BQ,
+        CIGAR,
+        DB,
+        DP,
+        END,
+        H2,
+        H3,
+        MQ,
+        MQ0,
+        NS,
+        SB,
+        SOMATIC,
+        VALIDATED,
+        VE,
+        CSQ,
+        MAF,
+        MAC,
+        MA,
+        CLIN_risk_factor,
+        CLIN_benign,
+        CLIN_likely_benign,
+        CLIN_uncertain_significance,
+        CLIN_histocompatibility,
+        CLIN_not_provided,
+        CLIN_association,
+        CLIN_pathogenic,
+        CLIN_likely_pathogenic,
+        CLIN_drug_response,
+        CLIN_other,
+        CLIN_confers_sensitivity,
+        CLIN_protective
     }
 
     public enum Annotation
@@ -450,6 +490,117 @@ public class VCFRecord
     {
         return this.parseInfo()
                    .get(additionalInfo.name());
+    }
+
+    /**
+     * Similar to {@link #getInfo()} but returns an {@link Optional}
+     * 
+     * @param additionalInfo
+     * @return
+     */
+    public Optional<String> getInfoValue(AdditionalInfo additionalInfo)
+    {
+        return Optional.ofNullable(this.getInfo(additionalInfo));
+    }
+
+    /**
+     * Returns true, if the given {@link AdditionalInfo} exists in the record. Note: the {@link #getInfo()} function might still return null and the
+     * {@link #getInfoValue(AdditionalInfo)} function might still return an empty {@link Optional} for the {@link AdditionalInfo} key, if only the key is
+     * present in the record without any value.
+     * 
+     * @param additionalInfo
+     * @return
+     */
+    public boolean getInfoExists(AdditionalInfo additionalInfo)
+    {
+        return this.parseInfo()
+                   .containsKey(additionalInfo.name());
+    }
+
+    /**
+     * Similar to {@link #getInfoTokens(AdditionalInfo, char)} with the pipe '|' as separator.
+     * 
+     * @param additionalInfo
+     * @return
+     */
+    public List<String> getInfoTokens(AdditionalInfo additionalInfo)
+    {
+        return this.getInfoTokens(additionalInfo, '|');
+    }
+
+    /**
+     * Returns the n-th value of {@link #getInfoTokens(AdditionalInfo)}. index=0,1,2,...
+     * 
+     * @param additionalInfo
+     * @param valueIndex
+     * @return
+     */
+    public Optional<String> getInfoTokensValue(AdditionalInfo additionalInfo, int valueIndex)
+    {
+        return ListUtils.optionalFirst(this.getInfoTokens(additionalInfo));
+    }
+
+    /**
+     * Returns info groups separated by comma (',')
+     * 
+     * @param additionalInfo
+     * @param valueIndex
+     * @return
+     */
+    public Stream<InfoTokenGroup> getInfoTokenGroups(AdditionalInfo additionalInfo)
+    {
+        return this.getInfoTokenGroups(additionalInfo, ',');
+    }
+
+    public Stream<InfoTokenGroup> getInfoTokenGroups(AdditionalInfo additionalInfo, char separator)
+    {
+        return this.getInfoTokenGroups(additionalInfo, separator, '|');
+    }
+
+    public Stream<InfoTokenGroup> getInfoTokenGroups(AdditionalInfo additionalInfo, char groupSeparator, char tokenSeparator)
+    {
+        return Optional.ofNullable(StringUtils.splitPreserveAllTokens(this.getInfo(additionalInfo), groupSeparator))
+                       .map(Arrays::asList)
+                       .orElse(Collections.emptyList())
+                       .stream()
+                       .map(groupInfo ->
+                       {
+                           List<String> subInfoTokens = this.getInfoTokens(groupInfo, tokenSeparator);
+                           return new InfoTokenGroup()
+                           {
+                               @Override
+                               public Optional<String> getValueAt(int index)
+                               {
+                                   return Optional.ofNullable(subInfoTokens)
+                                                  .filter(tokens -> tokens.size() >= index + 1)
+                                                  .map(tokens -> tokens.get(index));
+                               }
+                           };
+                       });
+    }
+
+    public static interface InfoTokenGroup
+    {
+        public Optional<String> getValueAt(int index);
+    }
+
+    /**
+     * Returns the {@link #getInfo()} {@link String} as tokens separated by the given {@link Character}
+     * 
+     * @param additionalInfo
+     * @param separator
+     * @return
+     */
+    public List<String> getInfoTokens(AdditionalInfo additionalInfo, char separator)
+    {
+        return this.getInfoTokens(this.getInfo(additionalInfo), separator);
+    }
+
+    private List<String> getInfoTokens(String info, char separator)
+    {
+        return Optional.ofNullable(StringUtils.splitPreserveAllTokens(info, separator))
+                       .map(Arrays::asList)
+                       .orElse(Collections.emptyList());
     }
 
     /**

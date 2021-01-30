@@ -16,8 +16,9 @@
 
 
 */
-package org.omnaest.genetics;
+package org.omnaest.genetics.vcf;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,14 +41,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.lang3.StringUtils;
-import org.omnaest.genetics.components.GenomeApplicatorImpl;
-import org.omnaest.genetics.components.VCFParserManager;
-import org.omnaest.genetics.components.parser.VCFParser;
-import org.omnaest.genetics.components.parser.VCFParser_4_1;
-import org.omnaest.genetics.domain.VCFData;
-import org.omnaest.genetics.domain.VCFRecord;
+import org.omnaest.genetics.vcf.components.GenomeApplicatorImpl;
+import org.omnaest.genetics.vcf.components.VCFParserManager;
+import org.omnaest.genetics.vcf.components.parser.VCFParser;
+import org.omnaest.genetics.vcf.components.parser.VCFParser_4_1;
+import org.omnaest.genetics.vcf.domain.VCFData;
+import org.omnaest.genetics.vcf.domain.VCFRecord;
 import org.omnaest.utils.IterableUtils;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MatcherUtils;
@@ -112,6 +114,14 @@ public class VCFUtils
         public VCFReader from(InputStream inputStream);
 
         /**
+         * Similar to {@link #from(InputStream)}
+         * 
+         * @param data
+         * @return
+         */
+        public VCFReader from(byte[] data);
+
+        /**
          * Reads the {@link VCFRecord}s from a given {@link Reader}
          * 
          * @param reader
@@ -129,7 +139,7 @@ public class VCFUtils
 
         /**
          * Parses the {@link VCFRecord}s and closes the underlying parser. This operation is not repeatable. This operation does not load the content into
-         * memory an is implemented for large vcf file {@link Stream} processing.
+         * memory and is implemented for large vcf file {@link Stream} processing.
          * 
          * @return
          */
@@ -176,9 +186,15 @@ public class VCFUtils
             }
 
             @Override
+            public VCFReader from(byte[] data)
+            {
+                return this.from(new ByteArrayInputStream(data));
+            }
+
+            @Override
             public VCFReader from(Reader reader)
             {
-                this.reader = reader;
+                this.reader = IOUtils.toBufferedReader(reader, 32 * 1024 * 1024);
                 return this;
             }
 

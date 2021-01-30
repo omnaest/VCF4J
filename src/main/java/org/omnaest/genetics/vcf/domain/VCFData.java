@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.genetics.domain;
+package org.omnaest.genetics.vcf.domain;
 
 import java.util.Map;
 import java.util.Set;

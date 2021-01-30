@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.genetics;
+package org.omnaest.genetics.vcf;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,15 +31,16 @@ import java.util.stream.Stream;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.omnaest.genetics.domain.VCFData;
-import org.omnaest.genetics.domain.VCFData.Replacements;
-import org.omnaest.genetics.domain.VCFRecord;
-import org.omnaest.genetics.domain.VCFRecord.SampleFields.Allele;
-import org.omnaest.genetics.domain.VCFRecord.SampleFields.GenoType;
-import org.omnaest.genetics.domain.VCFRecord.SampleInfo;
 import org.omnaest.genetics.translator.domain.CodeAndPosition;
 import org.omnaest.genetics.translator.domain.NucleicAcidCode;
 import org.omnaest.genetics.translator.domain.NucleicAcidCodeSequence;
+import org.omnaest.genetics.vcf.VCFUtils;
+import org.omnaest.genetics.vcf.domain.VCFData;
+import org.omnaest.genetics.vcf.domain.VCFRecord;
+import org.omnaest.genetics.vcf.domain.VCFData.Replacements;
+import org.omnaest.genetics.vcf.domain.VCFRecord.SampleInfo;
+import org.omnaest.genetics.vcf.domain.VCFRecord.SampleFields.Allele;
+import org.omnaest.genetics.vcf.domain.VCFRecord.SampleFields.GenoType;
 
 public class VCFUtilsTest
 {
