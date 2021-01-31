@@ -87,6 +87,15 @@ public class VCFUtils
         public VCFReader from(File file) throws FileNotFoundException;
 
         /**
+         * Similar to {@link #from(File)} but takes a file name as argument.
+         * 
+         * @param fileName
+         * @return
+         * @throws FileNotFoundException
+         */
+        public VCFReader fromFile(String fileName) throws FileNotFoundException;
+
+        /**
          * Reads the {@link VCFRecord}s from a {@link File} with the given {@link Charset}
          * 
          * @param file
@@ -164,7 +173,12 @@ public class VCFUtils
             public VCFReader from(File file) throws FileNotFoundException
             {
                 return this.from(file, StandardCharsets.UTF_8);
+            }
 
+            @Override
+            public VCFReader fromFile(String fileName) throws FileNotFoundException
+            {
+                return this.from(new File(fileName));
             }
 
             @Override
@@ -367,6 +381,8 @@ public class VCFUtils
 
         void into(File file) throws IOException;
 
+        void intoFile(String fileName) throws IOException;
+
         void into(File file, Charset encoding) throws IOException;
 
     }
@@ -420,6 +436,12 @@ public class VCFUtils
             public void into(File file) throws IOException
             {
                 this.into(file, StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public void intoFile(String fileName) throws IOException
+            {
+                this.into(new File(fileName));
             }
         };
     }

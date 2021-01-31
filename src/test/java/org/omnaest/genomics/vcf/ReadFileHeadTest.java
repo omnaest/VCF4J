@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.omnaest.genomics.vcf.VCFUtils;
 import org.omnaest.genomics.vcf.domain.VCFRecord;
 import org.omnaest.genomics.vcf.domain.VCFRecord.AdditionalInfo;
 import org.omnaest.utils.FileUtils;
@@ -82,6 +81,18 @@ public class ReadFileHeadTest
 
         VCFUtils.write(vcfData.stream())
                 .into(new File(file.getAbsolutePath() + "_filtered_relevant.vcf"));
+    }
+
+    @Test
+    @Ignore
+    public void testVCFParsing() throws IOException
+    {
+        VCFUtils.write(VCFUtils.read()
+                               .fromFile("input.vcf")
+                               .parseOnce()
+                               .filter(record -> record.getInfoValue(AdditionalInfo.CLIN_risk_factor)
+                                                       .isPresent()))
+                .intoFile("output.vcf");
     }
 
     @Test
