@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.genetics.vcf.components;
+package org.omnaest.genomics.vcf.components;
 
 import java.util.List;
 import java.util.SortedSet;
@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.omnaest.genetics.vcf.components.parser.VCFParser;
-import org.omnaest.genetics.vcf.components.parser.VCFParserFactory;
+import org.omnaest.genomics.vcf.components.parser.VCFParser;
+import org.omnaest.genomics.vcf.components.parser.VCFParserFactory;
 import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.StreamUtils.Drainage;
 

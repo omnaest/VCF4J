@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.genetics.vcf;
+package org.omnaest.genomics.vcf;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -44,12 +44,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.lang3.StringUtils;
-import org.omnaest.genetics.vcf.components.GenomeApplicatorImpl;
-import org.omnaest.genetics.vcf.components.VCFParserManager;
-import org.omnaest.genetics.vcf.components.parser.VCFParser;
-import org.omnaest.genetics.vcf.components.parser.VCFParser_4_1;
-import org.omnaest.genetics.vcf.domain.VCFData;
-import org.omnaest.genetics.vcf.domain.VCFRecord;
+import org.omnaest.genomics.vcf.components.GenomeApplicatorImpl;
+import org.omnaest.genomics.vcf.components.VCFParserManager;
+import org.omnaest.genomics.vcf.components.parser.VCFParser;
+import org.omnaest.genomics.vcf.components.parser.VCFParser_4_1;
+import org.omnaest.genomics.vcf.domain.VCFData;
+import org.omnaest.genomics.vcf.domain.VCFRecord;
 import org.omnaest.utils.IterableUtils;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MatcherUtils;

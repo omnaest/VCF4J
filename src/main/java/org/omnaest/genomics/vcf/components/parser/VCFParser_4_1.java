@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.genetics.vcf.components.parser;
+package org.omnaest.genomics.vcf.components.parser;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.omnaest.genetics.vcf.domain.VCFRecord;
+import org.omnaest.genomics.vcf.domain.VCFRecord;
 import org.omnaest.utils.MatcherUtils;
 import org.omnaest.utils.MatcherUtils.Match;
 import org.omnaest.utils.PatternUtils;

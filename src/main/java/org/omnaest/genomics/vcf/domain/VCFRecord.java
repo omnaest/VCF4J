@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.genetics.vcf.domain;
+package org.omnaest.genomics.vcf.domain;
 
 import java.util.Arrays;
 import java.util.Collections;

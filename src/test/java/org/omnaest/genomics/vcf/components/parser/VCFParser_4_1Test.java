@@ -1,11 +1,11 @@
-package org.omnaest.genetics.vcf.components.parser;
+package org.omnaest.genomics.vcf.components.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
-import org.omnaest.genetics.vcf.components.parser.VCFParser_4_1;
-import org.omnaest.genetics.vcf.components.parser.VCFParser_4_1.CommentFilter;
+import org.omnaest.genomics.vcf.components.parser.VCFParser_4_1;
+import org.omnaest.genomics.vcf.components.parser.VCFParser_4_1.CommentFilter;
 
 public class VCFParser_4_1Test
 {

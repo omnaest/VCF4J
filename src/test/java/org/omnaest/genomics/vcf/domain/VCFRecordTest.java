@@ -1,12 +1,12 @@
-package org.omnaest.genetics.vcf.domain;
+package org.omnaest.genomics.vcf.domain;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.omnaest.genetics.vcf.VCFUtils;
-import org.omnaest.genetics.vcf.domain.VCFRecord;
+import org.omnaest.genomics.vcf.VCFUtils;
+import org.omnaest.genomics.vcf.domain.VCFRecord;
 
 public class VCFRecordTest
 {

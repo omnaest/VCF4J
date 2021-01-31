@@ -1,4 +1,4 @@
-package org.omnaest.genetics.vcf;
+package org.omnaest.genomics.vcf;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,9 +11,9 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.omnaest.genetics.vcf.VCFUtils;
-import org.omnaest.genetics.vcf.domain.VCFRecord;
-import org.omnaest.genetics.vcf.domain.VCFRecord.AdditionalInfo;
+import org.omnaest.genomics.vcf.VCFUtils;
+import org.omnaest.genomics.vcf.domain.VCFRecord;
+import org.omnaest.genomics.vcf.domain.VCFRecord.AdditionalInfo;
 import org.omnaest.utils.FileUtils;
 
 public class ReadFileHeadTest

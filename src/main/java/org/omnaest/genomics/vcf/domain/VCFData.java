@@ -16,14 +16,14 @@
 
 
 */
-package org.omnaest.genetics.vcf.domain;
+package org.omnaest.genomics.vcf.domain;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.omnaest.genetics.translator.domain.CodeAndPosition;
-import org.omnaest.genetics.translator.domain.NucleicAcidCode;
+import org.omnaest.genomics.translator.domain.CodeAndPosition;
+import org.omnaest.genomics.translator.domain.NucleicAcidCode;
 import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 
 public interface VCFData
