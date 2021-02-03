@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,6 +45,9 @@ import org.omnaest.utils.StreamUtils;
  */
 public class VCFRecord
 {
+    public static final String SEMICOLON = ";";
+    public static final String DOT       = ".";
+
     private String              chromosome;
     private String              position;
     private String              id;
@@ -94,6 +98,25 @@ public class VCFRecord
     public String getId()
     {
         return this.id;
+    }
+
+    /**
+     * Returns a instance of a {@link Set} which returns all by {@value #SEMICOLON} separated values of the {@link #getId()} field. This ignores also
+     * {@value #DOT} values.
+     * 
+     * @return
+     */
+    public Set<String> getIds()
+    {
+        return Optional.ofNullable(this.id)
+                       .map(id -> StringUtils.splitByWholeSeparator(id, SEMICOLON))
+                       .map(Arrays::asList)
+                       .map(List::stream)
+                       .orElse(Stream.empty())
+                       .map(StringUtils::trim)
+                       .filter(StringUtils::isNotBlank)
+                       .filter(id -> !StringUtils.equals(DOT, id))
+                       .collect(Collectors.toSet());
     }
 
     /**
@@ -389,7 +412,7 @@ public class VCFRecord
 
         if (StringUtils.isNotBlank(this.info))
         {
-            String[] pairs = StringUtils.split(this.info, ";");
+            String[] pairs = StringUtils.split(this.info, SEMICOLON);
             if (pairs != null)
             {
                 for (String pair : pairs)

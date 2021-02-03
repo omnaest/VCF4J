@@ -4,9 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import org.junit.Test;
 import org.omnaest.genomics.vcf.VCFUtils;
-import org.omnaest.genomics.vcf.domain.VCFRecord;
 
 public class VCFRecordTest
 {
@@ -63,4 +65,18 @@ public class VCFRecordTest
         assertFalse(record.hasInsertion());
     }
 
+    @Test
+    public void testGetIds() throws Exception
+    {
+        VCFRecord record = VCFUtils.read()
+                                   .from("##fileformat=VCFv4.1\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t55101705103780\n1\t16362109\trs3085714;rs3085715;.\tACT\tA\t16\tnt\tVT=DEL;SST=Single;DP=20;DB;DBA=NA;PAF=NA;PC=0.400;RN=3\tGT:GQ:AB:DP:FC:INS:DEL:AD:QS:LOD:LDF:LDR:PW:PWF:PWR:MMQ:MMQS:IDL:MQ0:MDL:MDR:MDM:CGIANN_VARNAME:CGIANN_1000GAF:CGIANN_ESP6500AF\t0/1:176:ACT,A:20:0:0:7:13,7:346,184:0.00,16.12:0.00,0.00:0.00,16.12:0.00,0.97:0.00,0.00:0.00,0.97:60,52:11.1,90.6:0,0:0,0:124,114:27,37:16,10:-,chr1 g.16362110_16362111delCT (intergenic):-,NOT_FOUND:-,NOT_FOUND")
+                                   .parseOnce()
+                                   .findFirst()
+                                   .get();
+
+        assertEquals(Arrays.asList("rs3085714", "rs3085715")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     record.getIds());
+    }
 }

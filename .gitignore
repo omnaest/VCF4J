@@ -2,3 +2,4 @@
 /.settings
 /target
 /.classpath
+src/test/java/org/omnaest/genomics/vcf/ReadFileHeadTest.java
