@@ -43,6 +43,7 @@ import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.FileWriterWithEncoding;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.genomics.vcf.components.GenomeApplicatorImpl;
 import org.omnaest.genomics.vcf.components.VCFParserManager;
@@ -57,6 +58,7 @@ import org.omnaest.utils.MatcherUtils.Match;
 import org.omnaest.utils.PatternUtils;
 import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.zip.ZipUtils;
 
 /**
  * Utils regarding the variant call format<br>
@@ -104,6 +106,15 @@ public class VCFUtils
          * @throws FileNotFoundException
          */
         public VCFReader from(File file, Charset charset) throws FileNotFoundException;
+
+        /**
+         * Similar to {@link #from(File)} but assumes the file is in gzip (.gz) format
+         * 
+         * @param file
+         * @return
+         * @throws FileNotFoundException
+         */
+        public VCFReader fromGZip(File file) throws FileNotFoundException;
 
         /**
          * Reads the {@link VCFRecord}s from an {@link InputStream} using the given {@link Charset}
@@ -223,9 +234,9 @@ public class VCFUtils
             {
                 BiElement<Stream<VCFRecord>, Map<String, List<String>>> recordsWithComments = this.parseOnceWithComments();
                 Map<String, List<VCFRecord>> chromosomeToRecords = recordsWithComments.getFirst()
-                                                                                      .collect(Collectors.groupingBy(record -> StringUtils.replaceAll(StringUtils.upperCase(record.getChromosome()),
-                                                                                                                                                      "CHR",
-                                                                                                                                                      "")));
+                                                                                      .collect(Collectors.groupingBy(record -> RegExUtils.replaceAll(StringUtils.upperCase(record.getChromosome()),
+                                                                                                                                                     "CHR",
+                                                                                                                                                     "")));
                 Map<String, List<String>> comments = recordsWithComments.getSecond();
 
                 return new VCFData()
@@ -364,6 +375,25 @@ public class VCFUtils
 
                 return BiElement.of(parser.getRecords(), parser.getComments());
 
+            }
+
+            @Override
+            public VCFReader fromGZip(File file) throws FileNotFoundException
+            {
+                try
+                {
+                    return this.from(ZipUtils.read()
+                                             .fromGzip(file)
+                                             .asInputStream());
+                }
+                catch (FileNotFoundException e)
+                {
+                    throw e;
+                }
+                catch (IOException e)
+                {
+                    throw new IllegalStateException(e);
+                }
             }
 
         };
