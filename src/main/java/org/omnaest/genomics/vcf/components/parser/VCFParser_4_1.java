@@ -120,7 +120,7 @@ public class VCFParser_4_1 implements VCFParserFactory
                     public Stream<VCFRecord> getRecords()
                     {
                         return lines.filter(this.commentFilter)
-                                    .map(line -> this.mapToRecord(line));
+                                    .map(this::mapToRecord);
                     }
 
                     @Override

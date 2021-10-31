@@ -483,7 +483,10 @@ public class VCFRecord
         CLIN_drug_response,
         CLIN_other,
         CLIN_confers_sensitivity,
-        CLIN_protective
+        CLIN_protective,
+        /* dbSNP */
+        GENEINFO,
+        RS
     }
 
     public enum Annotation

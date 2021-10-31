@@ -38,8 +38,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -49,13 +51,13 @@ import org.junit.Test;
 import org.omnaest.genomics.translator.domain.CodeAndPosition;
 import org.omnaest.genomics.translator.domain.NucleicAcidCode;
 import org.omnaest.genomics.translator.domain.NucleicAcidCodeSequence;
-import org.omnaest.genomics.vcf.VCFUtils;
 import org.omnaest.genomics.vcf.domain.VCFData;
-import org.omnaest.genomics.vcf.domain.VCFRecord;
 import org.omnaest.genomics.vcf.domain.VCFData.Replacements;
-import org.omnaest.genomics.vcf.domain.VCFRecord.SampleInfo;
+import org.omnaest.genomics.vcf.domain.VCFRecord;
+import org.omnaest.genomics.vcf.domain.VCFRecord.AdditionalInfo;
 import org.omnaest.genomics.vcf.domain.VCFRecord.SampleFields.Allele;
 import org.omnaest.genomics.vcf.domain.VCFRecord.SampleFields.GenoType;
+import org.omnaest.genomics.vcf.domain.VCFRecord.SampleInfo;
 
 public class VCFUtilsTest
 {
@@ -325,6 +327,28 @@ public class VCFUtilsTest
                                                .toString());
         assertFalse(positionToReplacement.get(10l)
                                          .hasReplacementForAllele(1));
+    }
+
+    @Test
+    public void testDBSnpRecordParsing()
+    {
+        /*
+         * GENEINFO=PROK2:60675|PROK3:60676
+         * RS=60239864
+         */
+        VCFRecord record = VCFUtils.read()
+                                   .from(this.getClass()
+                                             .getResourceAsStream("/exampleDbSnp1.vcf"))
+                                   .parse()
+                                   .getRecords()
+                                   .findFirst()
+                                   .get();
+        assertEquals(Arrays.asList("PROK2", "PROK3"), record.getInfoTokenGroups(AdditionalInfo.GENEINFO, '|', ':')
+                                                            .map(group -> group.getValueAt(0))
+                                                            .filter(Optional::isPresent)
+                                                            .map(Optional::get)
+                                                            .collect(Collectors.toList()));
+        assertEquals("60239864", record.getInfo(AdditionalInfo.RS));
     }
 
 }
